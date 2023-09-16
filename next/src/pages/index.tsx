@@ -32,6 +32,7 @@ export default function Home() {
     try {
       const message = JSON.parse(msg.data)
       console.log(message)
+      console.log(message.action)
       if(message.action == "new_player_connected"){
         if(message.origin == scannedCode){
           setUser(scannedCode);
@@ -48,7 +49,7 @@ export default function Home() {
       else if (message.action == "waiting_for_opponent") {
           if(message.target == user){
             setOpponentCode(message.origin)
-            ws.send(JSON.stringify({"Action": "opponent_ready", "Origin": user, "Target": message.origin, "Battle": message.battle}))
+            ws.send(JSON.stringify({"action": "opponent_ready", "origin": user, "target": message.origin, "battle": message.battle}))
           }
       }
       else if (message.action == "opponent_ready") {
@@ -59,8 +60,12 @@ export default function Home() {
           }
       }
       else if (message.action == "submission") {
+        console.log("hi!")
+        console.log(message.battle)
+        console.log(currentBattle)
         if(message.battle == currentBattle){
-          if(message.origin == user?.code){
+          console.log("hi!")
+          if(message.origin == user){
             setGameState("won")
             setUploaded(true);
             setWinningPhoto(message.attachment)
@@ -75,7 +80,7 @@ export default function Home() {
         setGameState("rematch_requested")
         if(message.target == user?.code){
           if(True){
-            ws.send(JSON.stringify({"Action": "rematch_consent", "Origin": user?.code, "Target": message.origin}))
+            ws.send(JSON.stringify({"action": "rematch_consent", "origin": user, "target": message.origin}))
           }
         }
       }
@@ -95,7 +100,7 @@ export default function Home() {
       handleUploadUrl: "/api/upload",
     });
   
-    ws.send(JSON.stringify({"Action": "submission", "Origin": user, "Battle": currentBattle, "Attachment": uploaded.url }))
+    ws.send(JSON.stringify({"action": "submission", "origin": user, "battle": currentBattle, "attachment": uploaded.url }))
   };
   
   useEffect(() => {
@@ -170,7 +175,7 @@ export default function Home() {
             if (code.split("-").length !== 4) {
               return toast.error("Invalid QR code");
             }
-            ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
+            ws.send(JSON.stringify({"action": "player_join", "origin": code}))
             if(code != scannedCode){
               setScannedCode(code)
             }
@@ -182,7 +187,7 @@ export default function Home() {
               return toast.error("Invalid QR code");
             }
             // if (code === user) return;
-            ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
+            ws.send(JSON.stringify({"action": "player_join", "origin": code}))
             if(code != scannedCode){
               setScannedCode(code)
             }
@@ -299,7 +304,7 @@ export default function Home() {
       
           <div className="flex items-center justify-evenly w-full">
             <p className="flex-1 my-2 text-center font-mono text-sm">
-              You: <code>{user}</code>
+              You: <code>{user}</code> {currentBattle}
             </p>
       
             <p className="flex-1 my-2 text-center font-mono text-sm">
@@ -369,6 +374,47 @@ export default function Home() {
           </div>
         
           <h1 className="text-4xl font-bold text-center">Sweet! You win this round!</h1>
+          <div className="flex items-center justify-center gap-2">
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              onClick={() => {
+                ws.send(JSON.stringify({"Action": "rematch_request", "Origin": user, "Target": opponentCode}))
+              }}
+            >
+              Rematch
+            </button>
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              onClick={() => setGameState("ready")}
+            >
+              Play again
+            </button>
+          </div>
+        </main>
+      )
+      case 'lost':
+      return (
+        <main
+          className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
+        >
+          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm flex">
+            Hack the Geese
+            <div className="fixed bottom-0 left-0 flex w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
+              By Deet, Fayd, and Sam.
+            </div>
+          </div>
+        
+          <div className="flex items-center justify-evenly w-full">
+            <p className="flex-1 my-2 text-center font-mono text-sm">
+              You: <code>{router.query.person}</code>
+            </p>
+        
+            <p className="flex-1 my-2 text-center font-mono text-sm">
+              Opponent: <code>{router.query.opponent}</code>
+            </p>
+          </div>
+        
+          <h1 className="text-4xl font-bold text-center">oh no, you lost</h1>
           <div className="flex items-center justify-center gap-2">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
