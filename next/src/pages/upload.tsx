@@ -12,15 +12,16 @@ export default function AvatarUploadPage() {
 			<form
 				onSubmit={async (event) => {
 					event.preventDefault();
- 
-					const file = inputFileRef.current.files[0];
- 
-					const newBlob = await upload(file.name, file, {
-						access: 'public',
-						handleUploadUrl: '/api/upload',
-					});
- 
-					setBlob(newBlob);
+ 				 	if(inputFileRef?.current?.files){
+						const file = inputFileRef.current.files[0];
+						
+						const newBlob = await upload(file.name, file, {
+							access: 'public',
+							handleUploadUrl: '/api/upload',
+						});
+						
+						setBlob(newBlob);
+					}
 				}}
 			>
 				<input name="file" ref={inputFileRef} type="file" required />
