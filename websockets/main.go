@@ -160,6 +160,11 @@ func main() {
 								log.Println("Error updating battle: ", err)
 							}
 						}
+					} else if event.Action == "opponent_ready" {
+						err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "begin_battle", "battle": "%s", "prompt": "%s"}`, *event.Battle, "Here's a random prompt!")))
+						if err != nil {
+							log.Println("Error writing WebSocket data: ", err)
+						}
 					} else if event.Action == "rematch_request" {
 						err = wsutil.WriteServerMessage(conn, op, msg)
 						if err != nil {
