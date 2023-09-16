@@ -2,7 +2,6 @@ import Navbar from "@/components/Navbar";
 import React, { useState } from "react";
 import useSWR from "swr";
 import useLocalStorageState from "use-local-storage-state";
-import { User } from ".";
 import Image from "next/image";
 
 const AlbumPage = () => {
@@ -12,10 +11,10 @@ const AlbumPage = () => {
   ]);
 
   const currentTab = tabs.findIndex((t) => t.current);
-  const [user] = useLocalStorageState<User>("user");
+  const [user] = useLocalStorageState<string>("user");
 
   const { data, error, isLoading } = useSWR(
-    currentTab === 0 && user ? `/api/album/${user.code}` : "/api/album",
+    currentTab === 0 && user ? `/api/album/${user}` : "/api/album",
     (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
   );
 
