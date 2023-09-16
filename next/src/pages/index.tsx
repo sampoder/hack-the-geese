@@ -1,4 +1,4 @@
-import { QrScanner } from "@yudiel/react-qr-scanner";
+import { QrReader } from "react-qr-reader";
 import { Inter } from "next/font/google";
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef } from "react";
@@ -10,8 +10,6 @@ import { Camera } from "react-camera-pro";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export type User = { code: string; colors: string[] | null };
-
 export default function Home() {
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [currentBattle, setCurrentBattle] = useState<string | null>(null);
@@ -19,23 +17,23 @@ export default function Home() {
   const [gameState, setGameState] = useState<string | null>("authentication");
   const [winningPhoto, setWinningPhoto] = useState<string | null>(null);
   const [opponentCode, setOpponentCode] = useState<string | null>(null);
-  const [user, setUser] = useLocalStorageState<User | null>("user", { defaultValue: null });
+  const [user, setUser] = useLocalStorageState<string>("user");
   const camera = useRef<any>(null);
   const [image, setImage] = useState(null);
   const [uploaded, setUploaded] = useState(false);
   
   const router = useRouter();
  
-  const [ws, setWS] = useState(null);
+  const [ws, setWS] = useState<WebSocket>();
   
-  function handleOnMessage(msg){
+  function handleOnMessage(msg: any) {
     try {
       const message = JSON.parse(msg.data)
       console.log(message)
       console.log(message.action)
       if(message.action == "new_player_connected"){
         if(message.origin == scannedCode){
-          setUser(scannedCode);
+          setUser(scannedCode || "");
           // setGameState("geese")
           setGameState("ready")
         }
@@ -79,7 +77,7 @@ export default function Home() {
       else if (message.action == "rematch_request") {
         setGameState("rematch_requested")
         if(message.target == user){
-          if(true){
+          if (true) {
             ws.send(JSON.stringify({"action": "rematch_consent", "origin": user, "target": message.origin}))
           }
         }
@@ -139,62 +137,76 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-      
-          <QrScanner
-            containerStyle={{ maxWidth: 500, maxHeight: 500, height: 500, padding: 0, margin: 24 }}
-            constraints={{
-              aspectRatio: { min: 1, max: 1 },
-            }}
-            onDecode={(result) => {
-              const code = result.split("/").slice(-1)[0];
+
+          <QrReader
+            constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
+            onResult={(result) => {
+              if (!result) return;
+              const code = result.getText().split("/").slice(-1)[0];
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-              ws.send(JSON.stringify({"action": "player_join", "origin": code}))
-              if(code != scannedCode){
-                setScannedCode(code)
+
+              ws.send(JSON.stringify({ Action: "player_join", Origin: code }));
+              if (code != scannedCode) {
+                setScannedCode(code);
               }
             }}
-            onError={(error) => console.log(error.message)}
+            containerStyle={{
+              maxWidth: 500,
+              width: 500,
+              maxHeight: 500,
+              height: 500,
+              padding: 0,
+              margin: 24,
+            }}
           />
-          
-          <button onClick={() => {
-            const code = "pair-muskrat-sweater-tube";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            ws.send(JSON.stringify({"action": "player_join", "origin": code}))
-            if(code != scannedCode){
-              setScannedCode(code)
-            }
-          }}>Sam's QR Code</button>
-          
-          <button onClick={() => {
-            const code = "countess-polo-reward-claw";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            // if (code === user) return;
-            ws.send(JSON.stringify({"action": "player_join", "origin": code}))
-            if(code != scannedCode){
-              setScannedCode(code)
-            }
-          }}>Fayd's QR Code</button>
-      
+
+          <button
+            onClick={() => {
+              const code = "pair-muskrat-sweater-tube";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              ws.send(JSON.stringify({ action: "player_join", origin: code }));
+              if (code != scannedCode) {
+                setScannedCode(code);
+              }
+            }}
+          >
+            Sam&apos;s QR Code
+          </button>
+
+          <button
+            onClick={() => {
+              const code = "countess-polo-reward-claw";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              // if (code === user) return;
+              ws.send(JSON.stringify({ action: "player_join", origin: code }));
+              if (code != scannedCode) {
+                setScannedCode(code);
+              }
+            }}
+          >
+            Fayd&apos;s QR Code
+          </button>
+
           {user && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Your code:
               <code className="w-full my-2 text-center text-sm block">{user}</code>
             </p>
           )}
-      
+
           {opponentCode && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Scanned code:
               <code className="w-full my-2 text-center text-sm block">{opponentCode}</code>
             </p>
           )}
-      
+
           <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left"></div>
         </main>
       );
@@ -212,72 +224,78 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-        
-          <QrScanner
-            containerStyle={{ maxWidth: 500, maxHeight: 500, height: 500, padding: 0, margin: 24 }}
-            constraints={{
-              aspectRatio: { min: 1, max: 1 },
-            }}
-            onDecode={(result) => {
-              const code = result.split("/").slice(-1)[0];
-        
+
+          <QrReader
+            constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
+            onResult={(result) => {
+              if (!result) return;
+
+              const code = result.getText().split("/").slice(-1)[0];
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-        
+
               if (code === user) return;
-        
-              // make the user create a profile + select a duck.
-              // let them scan for the opponent.
-              // if opponent hasn't created a profile, ask them to tell the opponent to create a profile.
-              // opponent goes through the same process of creating a profile.
-              // once both players have created a profile, they can start the game.
-              // they get redirected to /match/[personalCode]/[opponentCode]
-        
+
               setOpponentCode(code);
-              
-              ws.send(JSON.stringify({"action": "new_battle", "origin": user, "target": code}))
+
+              ws!.send(JSON.stringify({ Action: "new_battle", Origin: user, Target: code }));
             }}
-            onError={(error) => console.log(error.message)}
+            containerStyle={{
+              maxWidth: 500,
+              width: 500,
+              maxHeight: 500,
+              height: 500,
+              padding: 0,
+              margin: 24,
+            }}
           />
-          
-          <button onClick={() => {
-            const code = "pair-muskrat-sweater-tube";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            if (code === user) return;
-            setOpponentCode(code);
-            ws.send(JSON.stringify({"action": "new_battle", "origin": user, "target": code}))
-          }}>Sam's QR Code</button>
-          
-          <button onClick={() => {
-            const code = "countess-polo-reward-claw";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            if (code === user) return;
-            setOpponentCode(code);
-            ws.send(JSON.stringify({"action": "new_battle", "origin": user, "target": code}))
-          }}>Fayd's QR Code</button>
-        
+
+          <button
+            onClick={() => {
+              const code = "pair-muskrat-sweater-tube";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              if (code === user) return;
+              setOpponentCode(code);
+              ws.send(JSON.stringify({ action: "new_battle", origin: user, target: code }));
+            }}
+          >
+            Sam&apos;s QR Code
+          </button>
+
+          <button
+            onClick={() => {
+              const code = "countess-polo-reward-claw";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              if (code === user) return;
+              setOpponentCode(code);
+              ws.send(JSON.stringify({ action: "new_battle", origin: user, target: code }));
+            }}
+          >
+            Fayd&apos;s QR Code
+          </button>
+
           {user && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Your code:
               <code className="w-full my-2 text-center text-sm block">{user}</code>
             </p>
           )}
-        
+
           {opponentCode && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Scanned code:
               <code className="w-full my-2 text-center text-sm block">{opponentCode}</code>
             </p>
           )}
-        
+
           <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left"></div>
         </main>
-      )
+      );
     case 'playing':
       return (
         <main
