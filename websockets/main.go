@@ -102,7 +102,12 @@ func main() {
 								log.Println("Error writing WebSocket data: ", err)
 							}
 						}
-					} else if event.Action == "new_battle" {
+					} else if event.Action == "new_battle" || event.Action == "rematch_consent" {
+						if event.Action == "rematch_consent" {
+							event.Action = "new_battle"
+							event.Origin, event.Target = *event.Target, &event.Origin
+						}
+						
 						targets, err := client.Player.FindMany(
 							db.Player.ID.Equals(*event.Target),
 						).Exec(ctx)
@@ -152,6 +157,11 @@ func main() {
 							if err != nil {
 								log.Println("Error updating battle: ", err)
 							}
+						}
+					} else if event.Action == "rematch_request" {
+						err = wsutil.WriteServerMessage(conn, op, msg)
+						if err != nil {
+							log.Println("Error writing WebSocket data: ", err)
 						}
 					} else {
 						err = wsutil.WriteServerMessage(conn, op, msg)
