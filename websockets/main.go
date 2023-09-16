@@ -119,7 +119,7 @@ func main() {
 								log.Println("Error writing WebSocket data: ", err)
 							}
 						} else {
-							_, err := client.Battle.CreateOne(
+							battle, err := client.Battle.CreateOne(
 								db.Battle.PlayerOne.Link(
 									db.Player.ID.Equals(event.Origin),
 								),
@@ -127,7 +127,7 @@ func main() {
 									db.Player.ID.Equals(*event.Target),
 								),
 							).Exec(ctx)
-							err = wsutil.WriteServerMessage(conn, op, msg)
+							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "waiting_for_opponent", "origin": "%s", "target": "%s", "battle": "%s"}`, event.Origin, *event.Target, battle.ID)))
 							if err != nil {
 								log.Println("Error writing WebSocket data: ", err)
 							}
@@ -160,8 +160,12 @@ func main() {
 								log.Println("Error updating battle: ", err)
 							}
 						}
+						err = wsutil.WriteServerMessage(conn, op, msg)
+						if err != nil {
+							log.Println("Error writing WebSocket data: ", err)
+						}
 					} else if event.Action == "opponent_ready" {
-						err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "begin_battle", "battle": "%s", "prompt": "%s"}`, *event.Battle, "Here's a random prompt!")))
+						err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "begin_battle", "battle": "%s", "prompt": "%s", "origin": "%s", "target": "%s"}`, *event.Battle, "Here's a random prompt!", *event.Origin, *event.Target )))
 						if err != nil {
 							log.Println("Error writing WebSocket data: ", err)
 						}
