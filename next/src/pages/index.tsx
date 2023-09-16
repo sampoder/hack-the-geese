@@ -52,8 +52,10 @@ export default function Home() {
       }
       else if (message.action == "opponent_ready") {
           if(message.target == user || message.origin == user){
+            console.log("REMATCH")
             setCurrentBattle(message.battle)
             setCurrentPrompt(message.prompt)
+            setImage(null)
             setGameState("playing")
           }
       }
@@ -75,12 +77,16 @@ export default function Home() {
         }
       }
       else if (message.action == "rematch_request") {
-        setGameState("rematch_requested")
         if(message.target == user){
+          setGameState("rematch_requested")
           if (true) {
-            ws.send(JSON.stringify({"action": "rematch_consent", "origin": user, "target": message.origin}))
+            ws.send(JSON.stringify({"action": "rematch_consent", "origin": user, "target": opponentCode}))
           }
         }
+      }
+      else if (message.action == "game_ended") {
+        setGameState("ready")
+        setOpponentCode(null)
       }
     }
     catch(e){
@@ -391,7 +397,11 @@ export default function Home() {
             </button>
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              onClick={() => setGameState("ready")}
+              onClick={() => {
+                setGameState("ready")
+                setOpponentCode(null)
+                ws.send(JSON.stringify({"action": "game_ended", "origin": user, "target": opponentCode}))
+              }}
             >
               Play again
             </button>

@@ -103,7 +103,6 @@ func main() {
 						} else if event.Action == "new_battle" || event.Action == "rematch_consent" {
 							if event.Action == "rematch_consent" {
 								event.Action = "new_battle"
-								event.Origin, event.Target = *event.Target, &event.Origin
 							}
 							
 							targets, err := client.Player.FindMany(
