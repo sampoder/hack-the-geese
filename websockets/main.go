@@ -17,6 +17,7 @@ type Event struct {
 	Origin string
 	Target *string
 	Battle *string
+	Attachment *string
 }
 
 func main() {
@@ -126,25 +127,30 @@ func main() {
 						}
 					} else if event.Action == "submission" {
 						battle, err := client.Battle.FindFirst(
-							db.Battle.ID.Equals(*event.Target),
+							db.Battle.ID.Equals(*event.Battle),
 						).Exec(ctx)
-						if len(targets) == 0 {
-							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "missing_target", "target": "%s"}`, *event.Target)))
-							if err != nil {
-								log.Println("Error writing WebSocket data: ", err)
-							}
-						} else {
-							_, err := client.Battle.CreateOne(
-								db.Battle.PlayerOne.Link(
-									db.Player.ID.Equals(event.Origin),
-								),
-								db.Battle.PlayerTwo.Link(
-									db.Player.ID.Equals(*event.Target),
-								),
+						if err != nil {
+							log.Println("Error fetching battle: ", err)
+						}
+						if battle.PlayerOneID == event.Origin {
+							_, err := client.Battle.FindUnique(
+								db.Battle.ID.Equals(*event.Battle),
+							).Update(
+								db.Battle.WinningPhoto.Set(*event.Attachment),
+								db.Battle.Winner.Set("PLAYER1"),
 							).Exec(ctx)
-							err = wsutil.WriteServerMessage(conn, op, msg)
 							if err != nil {
-								log.Println("Error writing WebSocket data: ", err)
+								log.Println("Error updating battle: ", err)
+							}
+						} else if battle.PlayerTwoID == event.Origin {
+							_, err := client.Battle.FindUnique(
+								db.Battle.ID.Equals(*event.Battle),
+							).Update(
+								db.Battle.WinningPhoto.Set(*event.Attachment),
+								db.Battle.Winner.Set("PLAYER2"),
+							).Exec(ctx)
+							if err != nil {
+								log.Println("Error updating battle: ", err)
 							}
 						}
 					} else {
