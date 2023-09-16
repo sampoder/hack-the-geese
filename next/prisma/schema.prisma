@@ -11,17 +11,19 @@ datasource db {
 model Player {
   id               String   @id
   score            Int?
+  goose            String?
   initiatedBattles Battle[] @relation("Player1")
   invitedToBattles Battle[] @relation("Player2")
 }
 
 model Battle {
-  id          String      @id @default(cuid())
-  playerOneID String
-  playerTwoID String
-  playerOne   Player      @relation("Player1", fields: [playerOneID], references: [id])
-  playerTwo   Player      @relation("Player2", fields: [playerTwoID], references: [id])
-  winner      WinnerEnum?
+  id           String      @id @default(cuid())
+  playerOneID  String
+  playerTwoID  String
+  winner       WinnerEnum?
+  winningPhoto String?
+  playerOne    Player      @relation("Player1", fields: [playerOneID], references: [id])
+  playerTwo    Player      @relation("Player2", fields: [playerTwoID], references: [id])
 }
 
 enum WinnerEnum {
