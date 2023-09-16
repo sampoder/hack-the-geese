@@ -17,10 +17,10 @@ export default function GameScreen() {
     const base64Response = await fetch(image);
     const blob = await base64Response.blob();
 
-    // const uploaded = await upload(`prompt-${router.query.person}.png`, blob, {
-    //   access: "public",
-    //   handleUploadUrl: "/api/upload",
-    // });
+    const uploaded = await upload(`prompt-${router.query.person}.png`, blob, {
+      access: "public",
+      handleUploadUrl: "/api/upload",
+    });
 
     setUploaded(true);
   };
