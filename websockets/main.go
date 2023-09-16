@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 	"encoding/json"
+	"websockets/db"
+	"context"
 )
 
 type Event struct {
@@ -18,6 +20,14 @@ type Event struct {
 }
 
 func main() {
+	
+	client := db.NewClient()
+	if err := client.Prisma.Connect(); err != nil {
+		panic(err)
+	}
+	
+	ctx := context.Background()
+	
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		var resp []byte
 		log.Println("hi!")
@@ -45,9 +55,39 @@ func main() {
 					var event Event	
 					json.Unmarshal([]byte(msg), &event)
 					log.Println(event.Action)
-					err = wsutil.WriteServerMessage(conn, op, msg)
-					if err != nil {
-						log.Println("Error writing WebSocket data: ", err)
+					if event.Action == "player_join" {
+						players, err := client.Player.FindMany(
+							db.Player.ID.Equals(event.Origin),
+						).Exec(ctx)
+						if len(players) == 0 {
+							_, err := client.Player.CreateOne(
+								db.Player.ID.Set(event.Origin),
+								db.Player.Score.Set(0),
+							).Exec(ctx)
+							if err != nil {
+								log.Println("Error creating new player: ", err)
+							}
+							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "new_player_connected", "origin": "%s"}`, event.Origin)))
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
+						} else {
+							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "player_connected", "origin": "%s"}`, event.Origin)))
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
+						}
+						
+					} else if event.Action == "new_battle" {
+						err = wsutil.WriteServerMessage(conn, op, msg)
+						if err != nil {
+							log.Println("Error writing WebSocket data: ", err)
+						}
+					} else {
+						err = wsutil.WriteServerMessage(conn, op, msg)
+						if err != nil {
+							log.Println("Error writing WebSocket data: ", err)
+						}
 					}
 				}
 			}()

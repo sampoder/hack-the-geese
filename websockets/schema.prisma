@@ -1,17 +1,30 @@
 datasource db {
-	provider = "sqlite"
-	url      = "file:dev.db"
+	provider = "postgresql"
+	url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+	directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
  
 generator db {
 	provider = "go run github.com/steebchen/prisma-client-go"
 }
  
-model Post {
-	id        String   @default(cuid()) @id
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
-	title     String
-	published Boolean
-	desc      String?
+model Player {
+	id        String   @id
+	score			Int?
+	initiatedBattles Battle[] @relation("Player1")
+	invitedToBattles Battle[] @relation("Player2")
+}
+ 
+model Battle {
+	id       String @id @default(cuid())
+	playerOne  Player @relation("Player1", fields: [playerOneID], references: [id])
+	playerOneID  String
+	playerTwo  Player @relation("Player2", fields: [playerTwoID], references: [id])
+	playerTwoID  String
+	winner   WinnerEnum
+}
+
+enum WinnerEnum {
+	PLAYER1
+	PLAYER2
 }
