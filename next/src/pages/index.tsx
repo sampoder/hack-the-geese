@@ -109,7 +109,7 @@ export default function Home() {
       newWS.onopen = () => {
         setWS(newWS);
         if(user && !scannedCode){
-          ws.send(JSON.stringify({"Action": "player_join", "Origin": user}))
+          ws.send(JSON.stringify({"action": "player_join", "origin": user}))
         } 
       }
       newWS.onmessage = msg => handleOnMessage(msg);
@@ -150,7 +150,7 @@ export default function Home() {
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-              ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
+              ws.send(JSON.stringify({"action": "player_join", "origin": code}))
               if(code != scannedCode){
                 setScannedCode(code)
               }
@@ -236,7 +236,7 @@ export default function Home() {
         
               setOpponentCode(code);
               
-              ws.send(JSON.stringify({"Action": "new_battle", "Origin": user, "Target": code}))
+              ws.send(JSON.stringify({"action": "new_battle", "origin": user, "target": code}))
             }}
             onError={(error) => console.log(error.message)}
           />
@@ -248,7 +248,7 @@ export default function Home() {
             }
             if (code === user) return;
             setOpponentCode(code);
-            ws.send(JSON.stringify({"Action": "new_battle", "Origin": user, "Target": code}))
+            ws.send(JSON.stringify({"action": "new_battle", "origin": user, "target": code}))
           }}>Sam's QR Code</button>
           
           <button onClick={() => {
@@ -258,7 +258,7 @@ export default function Home() {
             }
             if (code === user) return;
             setOpponentCode(code);
-            ws.send(JSON.stringify({"Action": "new_battle", "Origin": user, "Target": code}))
+            ws.send(JSON.stringify({"action": "new_battle", "origin": user, "target": code}))
           }}>Fayd's QR Code</button>
         
           {user && (
@@ -366,7 +366,7 @@ export default function Home() {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
-                ws.send(JSON.stringify({"Action": "rematch_request", "Origin": user, "Target": opponentCode}))
+                ws.send(JSON.stringify({"action": "rematch_request", "origin": user, "target": opponentCode}))
               }}
             >
               Rematch
@@ -407,7 +407,7 @@ export default function Home() {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
-                ws.send(JSON.stringify({"Action": "rematch_request", "Origin": user, "Target": opponentCode}))
+                ws.send(JSON.stringify({"action": "rematch_request", "origin": user, "target": opponentCode}))
               }}
             >
               Rematch

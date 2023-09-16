@@ -37,11 +37,9 @@ func main() {
 	
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		var resp []byte
-		log.Println("hi!")
 		var latestEvent Event	
 		if req.URL.Path == "/handler" {
 			conn, _, _, err := ws.UpgradeHTTP(req, rw)
-			log.Println("hi!")
 			if err != nil {
 				log.Println("Error with WebSocket: ", err)
 				rw.WriteHeader(http.StatusMethodNotAllowed)
