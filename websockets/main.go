@@ -17,6 +17,8 @@ type Event struct {
 	Origin string
 	Target *string
 	Battle *string
+	ColorOne *string
+	ColorTwo *string
 	Attachment *string
 }
 
@@ -159,6 +161,20 @@ func main() {
 							}
 						}
 					} else if event.Action == "rematch_request" {
+						err = wsutil.WriteServerMessage(conn, op, msg)
+						if err != nil {
+							log.Println("Error writing WebSocket data: ", err)
+						}
+					} else if event.Action == "goose_color_selected" {
+						_, err := client.Player.FindUnique(
+							db.Player.ID.Equals(event.Origin),
+						).Update(
+							db.Player.ColorOne.Set(*event.ColorOne),
+							db.Player.ColorTwo.Set(*event.ColorTwo),
+						).Exec(ctx)
+						if err != nil {
+							log.Println("Error updating player: ", err)
+						}
 						err = wsutil.WriteServerMessage(conn, op, msg)
 						if err != nil {
 							log.Println("Error writing WebSocket data: ", err)
