@@ -79,7 +79,7 @@ export default function Home() {
       else if (message.action == "rematch_request") {
         setGameState("rematch_requested")
         if(message.target == user){
-          if(True){
+          if(true){
             ws.send(JSON.stringify({"action": "rematch_consent", "origin": user, "target": message.origin}))
           }
         }
