@@ -7,16 +7,58 @@ import useLocalStorageState from "use-local-storage-state";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export type User = { code: string; image: string | null };
+export type User = { code: string; colors: string[] | null };
 
 export default function Home() {
+  const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [oppCode, setOppCode] = useState<string | null>(null);
   const [user, setUser] = useLocalStorageState<User | null>("user", { defaultValue: null });
   const router = useRouter();
+ 
+  const [ws, setWS] = useState(null);
+  
+  function handleOnMessage(msg){
+    try {
+      const message = JSON.parse(msg.data)
+      if(message.action == "new_player_connected"){
+        if(message.origin == scannedCode){
+          setUser({ code, image: null });
+          router.push(`/geese`);
+        }
+      }
+      else if (message.action == "player_connected") {
+          if(message.origin == scannedCode){
+            setUser({ code: message.origin, colors: message.colors });
+          }
+      }
+    }
+    catch(e){
+      console.log(msg)
+      console.error(e)
+    }
+  }
+  
+  useEffect(() => {
+      const newWS = new WebSocket("ws://localhost:8000/handler")
+      newWS.onerror = err => console.error(err);
+      newWS.onopen = () => setWS(newWS);
+      newWS.onmessage = msg => handleOnMessage(msg);
+      if(user !== null){
+        newWS.send(JSON.stringify({"Action": "player_join", "Origin": user}))
+      }
+      setWS(newWS)
+  }, [])
+  
+  useEffect(() => {
+    if(ws){
+      let newWS = ws
+      newWS.onmessage = msg => handleOnMessage(msg);
+      setWS(newWS) 
+    }
+  }, [scannedCode]);
 
   useEffect(() => {
     if (!user || !oppCode) return;
-
     router.push(`/match/${user.code}/${oppCode}`);
   }, [user, oppCode, router]);
 
@@ -64,8 +106,10 @@ export default function Home() {
 
           if (user) setOppCode(code);
           else {
-            setUser({ code, image: null });
-            router.push(`/geese`);
+            if(!scannedCode){
+              ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
+              setScannedCode(code)
+            }
           }
         }}
         onError={(error) => console.log(error.message)}

@@ -75,7 +75,7 @@ func main() {
 								log.Println("Error writing WebSocket data: ", err)
 							}
 						} else {
-							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "player_connected", "origin": "%s"}`, event.Origin)))
+							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "player_connected", "origin": "%s", "colors": ["%s", "%s"]}`, event.Origin, players[0].ColorOne, players[0].ColorTwo)))
 							if err != nil {
 								log.Println("Error writing WebSocket data: ", err)
 							}
