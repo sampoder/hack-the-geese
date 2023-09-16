@@ -1,8 +1,8 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
-import type { NextApiResponse, NextApiRequest } from 'next';
+import type { NextApiResponse } from 'next';
  
 export default async function handler(
-	request: NextApiRequest,
+	request: Request,
 	response: NextApiResponse,
 ) {
 	const body = (await request.json()) as HandleUploadBody;
