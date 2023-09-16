@@ -68,6 +68,8 @@ export default function Home() {
         </p>
       )}
 
+      
+
       {code && (
         <p className="w-full my-2 text-center font-mono text-sm">
           Scanned code:
