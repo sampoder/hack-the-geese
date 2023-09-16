@@ -41,12 +41,14 @@ export default function Home() {
   useEffect(() => {
       const newWS = new WebSocket("ws://localhost:8000/handler")
       newWS.onerror = err => console.error(err);
-      newWS.onopen = () => setWS(newWS);
-      newWS.onmessage = msg => handleOnMessage(msg);
-      if(user !== null){
-        newWS.send(JSON.stringify({"Action": "player_join", "Origin": user}))
+      newWS.onopen = () => {
+        setWS(newWS);
+        if(user !== null){
+          newWS.send(JSON.stringify({"Action": "player_join", "Origin": user}))
+        }
       }
-      setWS(newWS)
+      newWS.onmessage = msg => handleOnMessage(msg);
+      
   }, [])
   
   useEffect(() => {
