@@ -79,9 +79,73 @@ func main() {
 						}
 						
 					} else if event.Action == "new_battle" {
-						err = wsutil.WriteServerMessage(conn, op, msg)
-						if err != nil {
-							log.Println("Error writing WebSocket data: ", err)
+						targets, err := client.Player.FindMany(
+							db.Player.ID.Equals(*event.Target),
+						).Exec(ctx)
+						if len(targets) == 0 {
+							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "missing_target", "target": "%s"}`, *event.Target)))
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
+						} else {
+							_, err := client.Battle.CreateOne(
+								db.Battle.PlayerOne.Link(
+									db.Player.ID.Equals(event.Origin),
+								),
+								db.Battle.PlayerTwo.Link(
+									db.Player.ID.Equals(*event.Target),
+								),
+							).Exec(ctx)
+							err = wsutil.WriteServerMessage(conn, op, msg)
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
+						}
+					} else if event.Action == "new_battle" {
+						targets, err := client.Player.FindMany(
+							db.Player.ID.Equals(*event.Target),
+						).Exec(ctx)
+						if len(targets) == 0 {
+							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "missing_target", "target": "%s"}`, *event.Target)))
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
+						} else {
+							_, err := client.Battle.CreateOne(
+								db.Battle.PlayerOne.Link(
+									db.Player.ID.Equals(event.Origin),
+								),
+								db.Battle.PlayerTwo.Link(
+									db.Player.ID.Equals(*event.Target),
+								),
+							).Exec(ctx)
+							err = wsutil.WriteServerMessage(conn, op, msg)
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
+						}
+					} else if event.Action == "submission" {
+						battle, err := client.Battle.FindFirst(
+							db.Battle.ID.Equals(*event.Target),
+						).Exec(ctx)
+						if len(targets) == 0 {
+							err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf(`{"action": "missing_target", "target": "%s"}`, *event.Target)))
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
+						} else {
+							_, err := client.Battle.CreateOne(
+								db.Battle.PlayerOne.Link(
+									db.Player.ID.Equals(event.Origin),
+								),
+								db.Battle.PlayerTwo.Link(
+									db.Player.ID.Equals(*event.Target),
+								),
+							).Exec(ctx)
+							err = wsutil.WriteServerMessage(conn, op, msg)
+							if err != nil {
+								log.Println("Error writing WebSocket data: ", err)
+							}
 						}
 					} else {
 						err = wsutil.WriteServerMessage(conn, op, msg)

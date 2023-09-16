@@ -21,7 +21,8 @@ model Battle {
 	playerOneID  String
 	playerTwo  Player @relation("Player2", fields: [playerTwoID], references: [id])
 	playerTwoID  String
-	winner   WinnerEnum
+	winner   WinnerEnum?
+	winningPhoto	String?
 }
 
 enum WinnerEnum {
