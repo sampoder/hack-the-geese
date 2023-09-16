@@ -16,12 +16,12 @@ model Player {
 }
 
 model Battle {
-  id          String     @id @default(cuid())
+  id          String      @id @default(cuid())
   playerOneID String
   playerTwoID String
-  winner      WinnerEnum
-  playerOne   Player     @relation("Player1", fields: [playerOneID], references: [id])
-  playerTwo   Player     @relation("Player2", fields: [playerTwoID], references: [id])
+  playerOne   Player      @relation("Player1", fields: [playerOneID], references: [id])
+  playerTwo   Player      @relation("Player2", fields: [playerTwoID], references: [id])
+  winner      WinnerEnum?
 }
 
 enum WinnerEnum {
