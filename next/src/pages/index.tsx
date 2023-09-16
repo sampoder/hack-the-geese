@@ -1,16 +1,14 @@
-import { QrScanner } from "@yudiel/react-qr-scanner";
-import { Inter } from "next/font/google";
-import { useRouter } from "next/router";
-import { useEffect, useState, useRef } from "react";
-import toast from "react-hot-toast";
-import useLocalStorageState from "use-local-storage-state";
 import { upload } from "@vercel/blob/client";
+import { Inter } from "next/font/google";
 import Image from "next/image";
+import { useRouter } from "next/router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera } from "react-camera-pro";
+import toast from "react-hot-toast";
+import { QrReader } from "react-qr-reader";
+import useLocalStorageState from "use-local-storage-state";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export type User = { code: string; colors: string[] | null };
 
 export default function Home() {
   const [scannedCode, setScannedCode] = useState<string | null>(null);
@@ -19,108 +17,126 @@ export default function Home() {
   const [gameState, setGameState] = useState<string | null>("authentication");
   const [winningPhoto, setWinningPhoto] = useState<string | null>(null);
   const [opponentCode, setOpponentCode] = useState<string | null>(null);
-  const [user, setUser] = useLocalStorageState<User | null>("user", { defaultValue: null });
+  const [user, setUser] = useLocalStorageState<string>("user");
   const camera = useRef<any>(null);
   const [image, setImage] = useState(null);
   const [uploaded, setUploaded] = useState(false);
-  
+
   const router = useRouter();
- 
-  const [ws, setWS] = useState(null);
-  
-  function handleOnMessage(msg){
-    try {
-      const message = JSON.parse(msg.data)
-      console.log(message)
-      if(message.action == "new_player_connected"){
-        if(message.origin == scannedCode){
-          setUser(scannedCode);
-          // setGameState("geese")
-          setGameState("ready")
-        }
-      }
-      else if (message.action == "player_connected") {
-          if(message.origin == scannedCode){
+
+  const [ws, setWS] = useState<WebSocket>();
+
+  const handleOnMessage = useCallback(
+    (msg: any) => {
+      if (!ws) return;
+
+      try {
+        const message = JSON.parse(msg.data);
+        console.log(message);
+        if (message.action == "new_player_connected") {
+          if (message.origin == scannedCode) {
+            setUser(scannedCode || "");
+            // setGameState("geese")
+            setGameState("ready");
+          }
+        } else if (message.action == "player_connected") {
+          if (message.origin == scannedCode) {
             setUser(message.origin);
-            setGameState("ready")
+            setGameState("ready");
           }
-      }
-      else if (message.action == "waiting_for_opponent") {
-          if(message.target == user){
-            setOpponentCode(message.origin)
-            ws.send(JSON.stringify({"Action": "opponent_ready", "Origin": user, "Target": message.origin, "Battle": message.battle}))
+        } else if (message.action == "waiting_for_opponent") {
+          if (message.target == user) {
+            setOpponentCode(message.origin);
+            ws.send(
+              JSON.stringify({
+                Action: "opponent_ready",
+                Origin: user,
+                Target: message.origin,
+                Battle: message.battle,
+              })
+            );
           }
-      }
-      else if (message.action == "opponent_ready") {
-          if(message.target == user || message.origin == user){
-            setCurrentBattle(message.battle)
-            setCurrentPrompt(message.prompt)
-            setGameState("playing")
+        } else if (message.action == "opponent_ready") {
+          if (message.target == user || message.origin == user) {
+            setCurrentBattle(message.battle);
+            setCurrentPrompt(message.prompt);
+            setGameState("playing");
           }
-      }
-      else if (message.action == "submission") {
-        if(message.battle == currentBattle){
-          if(message.origin == user?.code){
-            setGameState("won")
-            setUploaded(true);
-            setWinningPhoto(message.attachment)
+        } else if (message.action == "submission") {
+          if (message.battle == currentBattle) {
+            if (message.origin == user) {
+              setGameState("won");
+              setUploaded(true);
+              setWinningPhoto(message.attachment);
+            } else {
+              setGameState("lost");
+              setWinningPhoto(message.attachment);
+            }
           }
-          else {
-            setGameState("lost")
-            setWinningPhoto(message.attachment)
+        } else if (message.action == "rematch_request") {
+          setGameState("rematch_requested");
+          if (message.target == user) {
+            if (true) {
+              ws.send(
+                JSON.stringify({
+                  Action: "rematch_consent",
+                  Origin: user,
+                  Target: message.origin,
+                })
+              );
+            }
           }
         }
+      } catch (e) {
+        console.log(msg);
+        console.error(e);
       }
-      else if (message.action == "rematch_request") {
-        setGameState("rematch_requested")
-        if(message.target == user?.code){
-          if(True){
-            ws.send(JSON.stringify({"Action": "rematch_consent", "Origin": user?.code, "Target": message.origin}))
-          }
-        }
-      }
-    }
-    catch(e){
-      console.log(msg)
-      console.error(e)
-    }
-  }
-  
+    },
+    [currentBattle, scannedCode, setUser, user, ws]
+  );
+
   const uploadImage = async (image: string) => {
+    if (!ws) return;
     const base64Response = await fetch(image);
     const blob = await base64Response.blob();
-  
+
     const uploaded = await upload(`prompt-${Math.random()}.png`, blob, {
       access: "public",
       handleUploadUrl: "/api/upload",
     });
-  
-    ws.send(JSON.stringify({"Action": "submission", "Origin": user, "Battle": currentBattle, "Attachment": uploaded.url }))
-  };
-  
-  useEffect(() => {
-      const newWS = new WebSocket("ws://2.tcp.ngrok.io:14453/handler")
-      newWS.onerror = err => console.error(err);
-      newWS.onopen = () => {
-        setWS(newWS);
-        if(user && !scannedCode){
-          ws.send(JSON.stringify({"Action": "player_join", "Origin": user}))
-        } 
-      }
-      newWS.onmessage = msg => handleOnMessage(msg);
-      
-  }, [])
-  
-  useEffect(() => {
-    if(ws){
-      let newWS = ws
-      newWS.onmessage = msg => handleOnMessage(msg);
-      setWS(newWS) 
-    }
-  }, [scannedCode, currentBattle, currentPrompt, opponentCode, user]);
 
-  switch(gameState) {
-    case 'authentication':
+    ws.send(
+      JSON.stringify({
+        Action: "submission",
+        Origin: user,
+        Battle: currentBattle,
+        Attachment: uploaded.url,
+      })
+    );
+  };
+
+  useEffect(() => {
+    const newWS = new WebSocket("ws://2.tcp.ngrok.io:14453/handler");
+    newWS.onerror = (err) => console.error(err);
+    newWS.onopen = () => {
+      setWS(newWS);
+      if (user && !scannedCode) {
+        newWS.send(JSON.stringify({ Action: "player_join", Origin: user }));
+      }
+    };
+    newWS.onmessage = (msg) => handleOnMessage(msg);
+  }, [handleOnMessage, scannedCode, user]);
+
+  useEffect(() => {
+    if (ws) {
+      let newWS = ws;
+      newWS.onmessage = (msg) => handleOnMessage(msg);
+      setWS(newWS);
+    }
+  }, [scannedCode, currentBattle, currentPrompt, opponentCode, user, ws, handleOnMessage]);
+
+  switch (gameState) {
+    case "authentication":
       return (
         <main
           className={`flex min-h-screen flex-col items-center justify-between py-12 px-6 ${inter.className}`}
@@ -134,78 +150,77 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-      
-          <QrScanner
-            containerStyle={{ maxWidth: 500, maxHeight: 500, height: 500, padding: 0, margin: 24 }}
-            constraints={{
-              aspectRatio: { min: 1, max: 1 },
-            }}
-            onDecode={(result) => {
-              const code = result.split("/").slice(-1)[0];
-      
+          qr2
+          <QrReader
+            constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
+            onResult={(result) => {
+              if (!result) return;
+              const code = result.getText().split("/").slice(-1)[0];
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-      
-              // if (code === user?.code) return;
-      
-              // make the user create a profile + select a duck.
-              // let them scan for the opponent.
-              // if opponent hasn't created a profile, ask them to tell the opponent to create a profile.
-              // opponent goes through the same process of creating a profile.
-              // once both players have created a profile, they can start the game.
-              // they get redirected to /match/[personalCode]/[opponentCode]
-      
-              console.log("hi!")
-              ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
-              if(code != scannedCode){
-                setScannedCode(code)
+
+              ws!.send(JSON.stringify({ Action: "player_join", Origin: code }));
+              if (code != scannedCode) {
+                setScannedCode(code);
               }
             }}
-            onError={(error) => console.log(error.message)}
+            containerStyle={{
+              maxWidth: 500,
+              width: 500,
+              maxHeight: 500,
+              height: 500,
+              padding: 0,
+              margin: 24,
+            }}
           />
-          
-          <button onClick={() => {
-            const code = "pair-muskrat-sweater-tube";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
-            if(code != scannedCode){
-              setScannedCode(code)
-            }
-          }}>Sam's QR Code</button>
-          
-          <button onClick={() => {
-            const code = "countess-polo-reward-claw";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            // if (code === user) return;
-            ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
-            if(code != scannedCode){
-              setScannedCode(code)
-            }
-          }}>Fayd's QR Code</button>
-      
+          <button
+            onClick={() => {
+              if (!ws) return;
+              const code = "pair-muskrat-sweater-tube";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              ws.send(JSON.stringify({ Action: "player_join", Origin: code }));
+              if (code != scannedCode) {
+                setScannedCode(code);
+              }
+            }}
+          >
+            Sam&apos;s QR Code
+          </button>
+          <button
+            onClick={() => {
+              if (!ws) return;
+              const code = "countess-polo-reward-claw";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              // if (code === user) return;
+              ws.send(JSON.stringify({ Action: "player_join", Origin: code }));
+              if (code != scannedCode) {
+                setScannedCode(code);
+              }
+            }}
+          >
+            Fayd&apos;s QR Code
+          </button>
           {user && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Your code:
               <code className="w-full my-2 text-center text-sm block">{user}</code>
             </p>
           )}
-      
           {opponentCode && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Scanned code:
               <code className="w-full my-2 text-center text-sm block">{opponentCode}</code>
             </p>
           )}
-      
           <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left"></div>
         </main>
       );
-    case 'ready':
+    case "ready":
       return (
         <main
           className={`flex min-h-screen flex-col items-center justify-between py-12 px-6 ${inter.className}`}
@@ -219,73 +234,76 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-        
-          <QrScanner
-            containerStyle={{ maxWidth: 500, maxHeight: 500, height: 500, padding: 0, margin: 24 }}
-            constraints={{
-              aspectRatio: { min: 1, max: 1 },
-            }}
-            onDecode={(result) => {
-              const code = result.split("/").slice(-1)[0];
-        
+          qr1
+          <QrReader
+            constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
+            onResult={(result) => {
+              if (!result) return;
+
+              const code = result.getText().split("/").slice(-1)[0];
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-        
+
               if (code === user) return;
-        
-              // make the user create a profile + select a duck.
-              // let them scan for the opponent.
-              // if opponent hasn't created a profile, ask them to tell the opponent to create a profile.
-              // opponent goes through the same process of creating a profile.
-              // once both players have created a profile, they can start the game.
-              // they get redirected to /match/[personalCode]/[opponentCode]
-        
+
               setOpponentCode(code);
-              
-              ws.send(JSON.stringify({"Action": "new_battle", "Origin": user, "Target": code}))
+
+              ws!.send(JSON.stringify({ Action: "new_battle", Origin: user, Target: code }));
             }}
-            onError={(error) => console.log(error.message)}
+            containerStyle={{
+              maxWidth: 500,
+              width: 500,
+              maxHeight: 500,
+              height: 500,
+              padding: 0,
+              margin: 24,
+            }}
           />
-          
-          <button onClick={() => {
-            const code = "pair-muskrat-sweater-tube";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            if (code === user) return;
-            setOpponentCode(code);
-            ws.send(JSON.stringify({"Action": "new_battle", "Origin": user, "Target": code}))
-          }}>Sam's QR Code</button>
-          
-          <button onClick={() => {
-            const code = "countess-polo-reward-claw";
-            if (code.split("-").length !== 4) {
-              return toast.error("Invalid QR code");
-            }
-            if (code === user) return;
-            setOpponentCode(code);
-            ws.send(JSON.stringify({"Action": "new_battle", "Origin": user, "Target": code}))
-          }}>Fayd's QR Code</button>
-        
+          <button
+            onClick={() => {
+              if (!ws) return;
+              const code = "pair-muskrat-sweater-tube";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              if (code === user) return;
+              setOpponentCode(code);
+              ws.send(JSON.stringify({ Action: "new_battle", Origin: user, Target: code }));
+            }}
+          >
+            Sam&apos;s QR Code
+          </button>
+          <button
+            onClick={() => {
+              if (!ws) return;
+              const code = "countess-polo-reward-claw";
+              if (code.split("-").length !== 4) {
+                return toast.error("Invalid QR code");
+              }
+              if (code === user) return;
+              setOpponentCode(code);
+              ws.send(JSON.stringify({ Action: "new_battle", Origin: user, Target: code }));
+            }}
+          >
+            Fayd&apos;s QR Code
+          </button>
           {user && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Your code:
               <code className="w-full my-2 text-center text-sm block">{user}</code>
             </p>
           )}
-        
           {opponentCode && (
             <p className="w-full my-2 text-center font-mono text-sm">
               Scanned code:
               <code className="w-full my-2 text-center text-sm block">{opponentCode}</code>
             </p>
           )}
-        
           <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left"></div>
         </main>
-      )
-    case 'playing':
+      );
+    case "playing":
       return (
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
@@ -296,17 +314,17 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-      
+
           <div className="flex items-center justify-evenly w-full">
             <p className="flex-1 my-2 text-center font-mono text-sm">
               You: <code>{user}</code>
             </p>
-      
+
             <p className="flex-1 my-2 text-center font-mono text-sm">
               Opponent: <code>{opponentCode}</code>
             </p>
           </div>
-      
+
           <div className="flex items-center justify-evenly w-full">
             <p className="flex justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-auto rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
               This is the prompt: Do this do that
@@ -318,7 +336,7 @@ export default function Home() {
               Take photo
             </button>
           </div>
-      
+
           {image ? (
             <>
               <Image width={500} height={500} src={image || ""} alt="Taken photo" />
@@ -345,8 +363,8 @@ export default function Home() {
             />
           )}
         </main>
-      )  
-    case 'won':
+      );
+    case "won":
       return (
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
@@ -357,23 +375,26 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-        
+
           <div className="flex items-center justify-evenly w-full">
             <p className="flex-1 my-2 text-center font-mono text-sm">
               You: <code>{router.query.person}</code>
             </p>
-        
+
             <p className="flex-1 my-2 text-center font-mono text-sm">
               Opponent: <code>{router.query.opponent}</code>
             </p>
           </div>
-        
+
           <h1 className="text-4xl font-bold text-center">Sweet! You win this round!</h1>
           <div className="flex items-center justify-center gap-2">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
-                ws.send(JSON.stringify({"Action": "rematch_request", "Origin": user, "Target": opponentCode}))
+                if (!ws) return;
+                ws.send(
+                  JSON.stringify({ Action: "rematch_request", Origin: user, Target: opponentCode })
+                );
               }}
             >
               Rematch
@@ -386,8 +407,6 @@ export default function Home() {
             </button>
           </div>
         </main>
-      )
+      );
   }
-
-  
 }
