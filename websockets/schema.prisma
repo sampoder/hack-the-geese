@@ -11,8 +11,7 @@ generator db {
 model Player {
 	id        String   @id
 	score			Int?
-	colorOne        String?  
-	colorTwo        String?  
+	goose        String?  
 	initiatedBattles Battle[] @relation("Player1")
 	invitedToBattles Battle[] @relation("Player2")
 }
