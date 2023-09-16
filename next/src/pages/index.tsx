@@ -27,6 +27,8 @@ export default function Home() {
   const [ws, setWS] = useState<WebSocket>();
   
   function handleOnMessage(msg: any) {
+    if (!ws) return;
+
     try {
       const message = JSON.parse(msg.data)
       console.log(message)
@@ -90,6 +92,8 @@ export default function Home() {
   }
   
   const uploadImage = async (image: string) => {
+    if (!ws) return;
+
     const base64Response = await fetch(image);
     const blob = await base64Response.blob();
   
@@ -107,7 +111,7 @@ export default function Home() {
       newWS.onopen = () => {
         setWS(newWS);
         if(user && !scannedCode){
-          ws.send(JSON.stringify({"action": "player_join", "origin": user}))
+          newWS.send(JSON.stringify({ action: "player_join", origin: user }));
         } 
       }
       newWS.onmessage = msg => handleOnMessage(msg);
@@ -147,7 +151,7 @@ export default function Home() {
                 return toast.error("Invalid QR code");
               }
 
-              ws.send(JSON.stringify({ Action: "player_join", Origin: code }));
+              ws!.send(JSON.stringify({ Action: "player_join", Origin: code }));
               if (code != scannedCode) {
                 setScannedCode(code);
               }
@@ -164,6 +168,8 @@ export default function Home() {
 
           <button
             onClick={() => {
+              if (!ws) return;
+
               const code = "pair-muskrat-sweater-tube";
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
@@ -179,11 +185,13 @@ export default function Home() {
 
           <button
             onClick={() => {
+              if (!ws) return;
+
               const code = "countess-polo-reward-claw";
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-              // if (code === user) return;
+
               ws.send(JSON.stringify({ action: "player_join", origin: code }));
               if (code != scannedCode) {
                 setScannedCode(code);
@@ -253,6 +261,8 @@ export default function Home() {
 
           <button
             onClick={() => {
+              if (!ws) return;
+
               const code = "pair-muskrat-sweater-tube";
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
@@ -267,6 +277,8 @@ export default function Home() {
 
           <button
             onClick={() => {
+              if (!ws) return;
+
               const code = "countess-polo-reward-claw";
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
@@ -384,6 +396,8 @@ export default function Home() {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
+                if (!ws) return;
+
                 ws.send(JSON.stringify({"action": "rematch_request", "origin": user, "target": opponentCode}))
               }}
             >
@@ -425,6 +439,8 @@ export default function Home() {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
+                if (!ws) return;
+
                 ws.send(JSON.stringify({"action": "rematch_request", "origin": user, "target": opponentCode}))
               }}
             >
