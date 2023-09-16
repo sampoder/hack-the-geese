@@ -78,7 +78,7 @@ export default function Home() {
       }
       else if (message.action == "rematch_request") {
         setGameState("rematch_requested")
-        if(message.target == user?.code){
+        if(message.target == user){
           if(True){
             ws.send(JSON.stringify({"action": "rematch_consent", "origin": user, "target": message.origin}))
           }
@@ -147,21 +147,9 @@ export default function Home() {
             }}
             onDecode={(result) => {
               const code = result.split("/").slice(-1)[0];
-      
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-      
-              // if (code === user?.code) return;
-      
-              // make the user create a profile + select a duck.
-              // let them scan for the opponent.
-              // if opponent hasn't created a profile, ask them to tell the opponent to create a profile.
-              // opponent goes through the same process of creating a profile.
-              // once both players have created a profile, they can start the game.
-              // they get redirected to /match/[personalCode]/[opponentCode]
-      
-              console.log("hi!")
               ws.send(JSON.stringify({"Action": "player_join", "Origin": code}))
               if(code != scannedCode){
                 setScannedCode(code)
