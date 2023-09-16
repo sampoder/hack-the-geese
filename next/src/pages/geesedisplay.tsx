@@ -43,9 +43,17 @@ const GeeseComponent: React.FC = () => {
         const container = document.getElementById('geese-container');
         if (container) {
           container.innerHTML = data;
- 
 
-  const whiteGroup = document.getElementById('white');
+          const feetGroup = document.getElementById('feet');
+          if (feetGroup) {
+            feetGroup.childNodes.forEach((child) => {
+              if (child instanceof Element) {
+                child.setAttribute('fill', '#FFFFFF');
+              }
+            });
+          }
+
+          const whiteGroup = document.getElementById('white');
           if (whiteGroup) {
             whiteGroup.childNodes.forEach((child) => {
               if (child instanceof Element) {
@@ -56,6 +64,8 @@ const GeeseComponent: React.FC = () => {
         }
       });
   }, []);
+};
+
 
 
   return (
