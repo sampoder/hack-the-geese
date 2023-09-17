@@ -60,11 +60,7 @@ export default function Home() {
           }
       }
       else if (message.action == "submission") {
-        console.log("hi!")
-        console.log(message.battle)
-        console.log(currentBattle)
         if(message.battle == currentBattle){
-          console.log("hi!")
           if(message.origin == user){
             setGameState("won")
             setUploaded(true);
@@ -104,7 +100,16 @@ export default function Home() {
       handleUploadUrl: "/api/upload",
     });
   
-    ws.send(JSON.stringify({"action": "submission", "origin": user, "battle": currentBattle, "attachment": uploaded.url }))
+    ws.send(
+      JSON.stringify(
+        {
+          "action": "submission", 
+          "origin": user, 
+          "battle": currentBattle, 
+          "attachment": uploaded.url 
+        }
+      )
+    )      
   };
   
   useEffect(() => {
@@ -175,7 +180,7 @@ export default function Home() {
             }}
           />
 
-          {true && 
+          {false && 
             <>
               <button
                 onClick={() => {
@@ -256,7 +261,7 @@ export default function Home() {
               margin: 24,
             }}
           />
-          {true && 
+          {false && 
             <>
               <button
                 onClick={() => {
