@@ -61,6 +61,11 @@ func main() {
 	
 	var currentEvent Event	
 	
+	rand.Seed(time.Now().UnixNano())
+	
+	randomIndex := rand.Intn(len(lines))
+	randomLine := lines[randomIndex]
+	
 	var currentMsg []byte
 	
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -91,6 +96,11 @@ func main() {
 						log.Println("Error writing WebSocket data: ", err)
 						conn.Close()
 						return
+					}
+					if event.Action == "opponent_ready" {
+						rand.Seed(time.Now().UnixNano())
+						randomIndex = rand.Intn(len(lines))
+						randomLine = lines[randomIndex]
 					}
 				}
 			}()
@@ -200,11 +210,6 @@ func main() {
 							}
 						} else if event.Action == "opponent_ready" {
 							log.Println("Error updating battle: ", event.Origin)
-
-							rand.Seed(time.Now().UnixNano())
-
-							randomIndex := rand.Intn(len(lines))
-							randomLine := lines[randomIndex]
 
 							err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(fmt.Sprintf(`{"action": "opponent_ready", "battle": "%s", "prompt": "%s", "origin": "%s", "target": "%s"}`, *event.Battle, randomLine, event.Origin, *event.Target )))
 							if err != nil {
