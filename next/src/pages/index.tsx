@@ -111,7 +111,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-      const newWS = new WebSocket("ws://shy-frost-9467.fly.dev:80/handler")
+      const newWS = new WebSocket("wss://shy-frost-9467.fly.dev:443/handler")
       newWS.onerror = err => console.error(err);
       newWS.onopen = () => {
         setWS(newWS);
