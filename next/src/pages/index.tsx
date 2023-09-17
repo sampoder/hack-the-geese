@@ -14,7 +14,7 @@ export default function Home() {
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [currentBattle, setCurrentBattle] = useState<string | null>(null);
   const [currentPrompt, setCurrentPrompt] = useState<string | null>(null);
-  const [firstGame, setFirstGame] = useState<string | null>(null);
+  const [firstGame, setFirstGame] = useState<boolean | null>(null);
   const [gameState, setGameState] = useState<string | null>("authentication");
   const [winningPhoto, setWinningPhoto] = useState<string | null>(null);
   const [opponentCode, setOpponentCode] = useState<string | null>(null);
