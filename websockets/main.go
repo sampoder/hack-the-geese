@@ -11,6 +11,9 @@ import (
 	"websockets/db"
 	"context"
 	"errors"
+	"bufio"
+	"math/rand"
+	"os"
 )
 
 type Event struct {
@@ -163,7 +166,37 @@ func main() {
 							}
 						} else if event.Action == "opponent_ready" {
 							log.Println("Error updating battle: ", event.Origin)
-							err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(fmt.Sprintf(`{"action": "opponent_ready", "battle": "%s", "prompt": "%s", "origin": "%s", "target": "%s"}`, *event.Battle, "Here's a random prompt!", event.Origin, *event.Target )))
+
+							rand.Seed(time.Now().UnixNano())
+							file, err := os.Open("prompts.txt")
+
+							if err != nil {
+									fmt.Println("Error opening file:", err)
+									return
+							}
+							defer file.Close()
+
+							scanner := bufio.NewScanner(file)
+							lines := []string{}
+
+							for scanner.Scan() {
+									lines = append(lines, scanner.Text())
+							}
+
+							if err := scanner.Err(); err != nil {
+									fmt.Println("Error reading file:", err)
+									return
+							}
+
+							if len(lines) == 0 {
+									fmt.Println("The file is empty.")
+									return
+							}
+
+							randomIndex := rand.Intn(len(lines))
+							randomLine := lines[randomIndex]
+
+							err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(fmt.Sprintf(`{"action": "opponent_ready", "battle": "%s", "prompt": "%s", "origin": "%s", "target": "%s"}`, *event.Battle, randomLine, event.Origin, *event.Target )))
 							if err != nil {
 								log.Println("Error writing WebSocket data: ", err)
 							}
