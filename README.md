@@ -57,3 +57,7 @@ This game was all about taking photos! Here are some random photos from our time
 We learned that making friends is just as crucial as writing good code. The journey from encountering problems to finding solutions showed us that anyone can overcome their fears. And yes, we also discovered that Canada has some really tasty snacks!
 
 <img width="711" alt="Screenshot 2023-09-17 at 11 10 12 AM" src="https://github.com/sampoder/hack-the-geese/assets/39828164/69618422-904b-4aa0-ace3-a29920f4be44">
+
+## Oh and one more thing.
+
+Turns out we were finalists! Yay!
