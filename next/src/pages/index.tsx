@@ -213,7 +213,7 @@ export default function Home() {
               }
               if (code != scannedCode) {
                 setScannedCode(code);
-                toast.success("QR code scanned, your code is: " + code, { duration: 5000 });
+                toast.success("QR code scanned, your code is: " + code, { id: 'scan_self', duration: 5000 });
               }
             }}
           />
@@ -315,7 +315,7 @@ export default function Home() {
               }
               if (code === user) return;
               setOpponentCode(code);
-              toast.success("QR code scanned, opponent code is: " + code, { duration: 5000 });
+              toast.success("QR code scanned, opponent code is: " + code, { id: 'scan_opponent', duration: 5000 });
             }}
           />
           {false && (
@@ -367,13 +367,13 @@ export default function Home() {
         </main>
       );
     case "geese":
-      return <GeeseComponent />
+      return <GeeseComponent ws={ws} user={user} />
     case "playing":
       return (
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
         >
-          <h1 className="text-4xl font-bold text-center">Hack the Geese</h1>
+          <h1 className="text-4xl font-bold text-center">Hack The Geese</h1>
 
           <div className="flex items-center justify-evenly w-full">
             <p className="flex-1 my-2 text-center font-mono text-sm">
@@ -429,8 +429,8 @@ export default function Home() {
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
         >
-          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm flex">
-            Hack the Geese
+          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono font-bold text-sm flex">
+            Hack The Geese
             <div className="fixed bottom-0 left-0 flex w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
               By Deet, Fayd, and Sam.
             </div>
@@ -478,8 +478,8 @@ export default function Home() {
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
         >
-          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm flex">
-            Hack the Geese
+          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono font-bold text-sm flex">
+            Hack The Geese
             <div className="fixed bottom-0 left-0 flex w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
               By Deet, Fayd, and Sam.
             </div>
@@ -528,7 +528,8 @@ const randomHexColor = () => {
   return color;
 };
 
-const changeColorOfGroups = (groupIds:any) => {
+const changeColorOfGroups = (groupIds: any) => {
+  let hexs = []
   groupIds.forEach((id:any) => {
     const element = document.getElementById(id);
     if (element) {
@@ -537,19 +538,24 @@ const changeColorOfGroups = (groupIds:any) => {
           if (id === 'white') {
             child.setAttribute('fill', '#FFFFFF');
           } else {
-            child.setAttribute('fill', randomHexColor());
+            let hex = randomHexColor()
+            child.setAttribute('fill', hex);
+            hexs.push(hex)
           }
         }
       });
     }
   });
+  return hexs
 };
 
 const changeBackgroundColor = () => {
   document.body.style.backgroundColor = randomHexColor();
 };
 
-const GeeseComponent = () => {
+const GeeseComponent = ({ws, user}) => {
+  const [hexes, setHexes] = useState<string[] | null>(null);
+    
   useEffect(() => {
     fetch('geese.svg')
       .then(response => response.text())
@@ -557,32 +563,61 @@ const GeeseComponent = () => {
         const container = document.getElementById('geese-container');
         if (container) {
           container.innerHTML = data;
-          
           // Change colors and background immediately upon loading
-          changeColorOfGroups(['fur1', 'fur2', 'shadow', 'white', 'feet', 'svg-background']);
+          setHexes(changeColorOfGroups(['fur1', 'fur2', 'shadow', 'white', 'feet', 'svg-background']));
           changeBackgroundColor();
-          
         }
       });
   }, []);
 
   return (
-    <div style={{ textAlign: 'center' }}>
-   <button      
-    onClick={() => { 
-      changeColorOfGroups(['fur1', 'fur2', 'shadow', 'white', 'feet', 'svg-background']); 
-      changeBackgroundColor();
-    }}
-      >
-        Generate Geese
-      </button>
+    <main
+      className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
+    >
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono font-bold text-sm flex">
+        Hack The Geese
+        <div className="fixed bottom-0 left-0 flex w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
+          By Deet, Fayd, and Sam.
+        </div>
+      </div>
+    
+      <div id="geese-container" style={{ backgroundColor: 'white', height: '400px', width: '400px', borderRadius: '8px' }}></div>
       
-      <div id="geese-container" style={{ backgroundColor: 'white' }}></div>
-  
-      <Link href="/gamestart">
-        <button>Start Game</button>
-      </Link>
-    </div>
+      <div className="flex items-center justify-center gap-2">
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => {
+            var s = new XMLSerializer().serializeToString(document.querySelector("#geese-container > svg"))
+            var encodedData = window.btoa(s);
+            ws.send(
+              JSON.stringify({ action: "set_goose", origin: user, goose: encodedData })
+            );
+          }}
+        >
+          Save My Goose
+        </button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => { 
+            setHexes(changeColorOfGroups(['fur1', 'fur2', 'shadow', 'white', 'feet', 'svg-background'])); 
+            changeBackgroundColor();
+          }}
+        >
+          Generate Another
+        </button>
+      </div>
+      <style>
+        {
+          `
+          svg {
+            height: 100%;
+            padding: 24px 
+          }
+          
+          `
+        }
+      </style>
+    </main>
   );
 };
 

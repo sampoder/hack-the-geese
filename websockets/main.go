@@ -37,7 +37,7 @@ func main() {
 	
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		var resp []byte
-		var latestEvent Event	
+		var latestEvent Event	= currentEvent
 		if req.URL.Path == "/handler" {
 			conn, _, _, err := ws.UpgradeHTTP(req, rw)
 			if err != nil {
@@ -74,7 +74,7 @@ func main() {
 					if(latestEvent != currentEvent){
 						var event Event	= currentEvent
 						latestEvent = event
-						if event.Action == "player_join" {
+						if event.Action == "player_join" || event.Action == "set_goose" {
 							player, err := client.Player.FindFirst(
 								db.Player.ID.Equals(event.Origin),
 							).Exec(ctx)
@@ -93,6 +93,16 @@ func main() {
 							} else if err != nil {
 								log.Printf("error occurred: %s", err)
 							} else {
+								if(event.Action == "set_goose"){
+									_, err := client.Player.FindUnique(
+										db.Player.ID.Equals(event.Origin),
+									).Update(
+										db.Player.Goose.Set(*event.Goose),
+									).Exec(ctx)
+									if err != nil {
+										log.Println("Error updating Player data: ", err)
+									}
+								}
 								log.Println("Error writing WebSocket data: ",  player.Goose)
 								err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(fmt.Sprintf(`{"action": "player_connected", "origin": "%s"}`, event.Origin)))
 								if err != nil {
@@ -104,7 +114,6 @@ func main() {
 							if event.Action == "rematch_consent" {
 								event.Action = "new_battle"
 							}
-							
 							targets, err := client.Player.FindMany(
 								db.Player.ID.Equals(*event.Target),
 							).Exec(ctx)
