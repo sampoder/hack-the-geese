@@ -14,7 +14,6 @@ export default function Home() {
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [currentBattle, setCurrentBattle] = useState<string | null>(null);
   const [currentPrompt, setCurrentPrompt] = useState<string | null>(null);
-  const [firstGame, setFirstGame] = useState<boolean | null>(null);
   const [gameState, setGameState] = useState<string | null>("authentication");
   const [winningPhoto, setWinningPhoto] = useState<string | null>(null);
   const [opponentCode, setOpponentCode] = useState<string | null>(null);
@@ -55,10 +54,7 @@ export default function Home() {
         }
       } else if (message.action == "opponent_ready") {
         if (message.target == user || message.origin == user) {
-          if(firstGame == null){
-            setFirstGame(true)
-          }
-          else { setFirstGame(false) }
+          console.log("REMATCH");
           setCurrentBattle(message.battle);
           setCurrentPrompt(message.prompt);
           setImage(null);
@@ -168,7 +164,7 @@ export default function Home() {
       setWS(newWS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scannedCode, currentBattle, currentPrompt, opponentCode, user, firstGame]);
+  }, [scannedCode, currentBattle, currentPrompt, opponentCode, user]);
 
   useEffect(() => {
     if (ws && scannedCode) {
@@ -419,7 +415,7 @@ export default function Home() {
 
           <div className="flex sm:items-center justify-evenly w-full gap-2 flex-col sm:flex-row items-stretch">
             <p className="flex justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-auto rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
-              {firstGame ? "Take a selfie with someone wearing sunglasses!": currentPrompt}
+              {currentPrompt}
             </p>
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
