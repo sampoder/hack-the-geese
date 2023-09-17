@@ -36,6 +36,24 @@ Here are some janky photos of it in action from when we were testing:
 
 <img src="https://cloud-8bnhwq0dh-hack-club-bot.vercel.app/0screenshot_2023-09-17_at_7.48.45_am.png" width="600px" />
 <img src="https://cloud-8bnhwq0dh-hack-club-bot.vercel.app/1screenshot_2023-09-17_at_7.49.03_am.png" width="600px" />
-<img src="https://cloud-8bnhwq0dh-hack-club-bot.vercel.app/2screenshot_2023-09-17_at_7.49.00_am.png" width="600px" />
+<img src="https://github.com/sampoder/hack-the-geese/assets/39828164/7736f61d-64d0-47fe-88c6-67e0a9f516c1" width="600px" />
 
 _(those are the faces you make at 4am when your code just isn't working...)_
+
+## "Challenges" We Ran Into
+
+First night: total system crash due to the websockets server not properly closing connections, fixed after many tireless hours.. thanks Sam. Fayd had to reimplement the broken QR scanner, twice! We weren't having much luck with those React components. Dieter struggled with coding unique duck colors... but after many bug fixes everything started working together.
+
+Most of all, however, getting to the event was tough for all of us. Sam flew overnight from California (which somehow also involved getting stuck on top of Twin Peaks, walking along an interstate to get from Millbrae BART station to SFO at 2am, and a late night adventure in the Castro), Dieter drove 9 hours from Vermont (only to be told by a customs agent that "Canada was closed"... it was not), and Fayd had a gruelling 30-hour journey from India with layovers (...his bag almost got stuck in Atlanta). But it was worth it!
+
+## Random Photos
+
+This game was all about taking photos! Here are some random photos from our time at HTN:
+
+<img src="https://github.com/sampoder/hack-the-geese/assets/39828164/08ca52f3-2170-453e-b223-0abe5576a1d4" height="250px" /> <img src="https://github.com/sampoder/hack-the-geese/assets/39828164/4a7e75e7-e510-48f7-bf8e-38f493a24f4c" height="250px" /> <img src="https://cloud-jz030l9b7-hack-club-bot.vercel.app/0img_1005.jpg" height="250px" /> <img src="https://cloud-a0d0g8i6t-hack-club-bot.vercel.app/1img_3198.jpg" height="250px" /> <img src="https://cloud-bjgg4lc3e-hack-club-bot.vercel.app/0screenshot_2023-09-17_at_11.05.58_am.png" height="250px" /> <img src="https://cloud-6wspcpa2s-hack-club-bot.vercel.app/0prompt-0.9953789439296532.png" height="250px" />
+
+## To Wrap Up...
+
+We learned that making friends is just as crucial as writing good code. The journey from encountering problems to finding solutions showed us that anyone can overcome their fears. And yes, we also discovered that Canada has some really tasty snacks!
+
+<img width="711" alt="Screenshot 2023-09-17 at 11 10 12 AM" src="https://github.com/sampoder/hack-the-geese/assets/39828164/69618422-904b-4aa0-ace3-a29920f4be44">
