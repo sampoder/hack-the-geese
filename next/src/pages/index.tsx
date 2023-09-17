@@ -111,15 +111,15 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const newWS = new WebSocket("ws://2.tcp.ngrok.io:14453/handler");
-    newWS.onerror = (err) => console.error(err);
-    newWS.onopen = () => {
-      setWS(newWS);
-    };
-    newWS.onmessage = (msg) => handleOnMessage(msg);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+      const newWS = new WebSocket("ws://shy-frost-9467.fly.dev:80/handler")
+      newWS.onerror = err => console.error(err);
+      newWS.onopen = () => {
+        setWS(newWS);
+      }
+      newWS.onmessage = msg => handleOnMessage(msg);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  
   useEffect(() => {
     if (ws) {
       let newWS = ws;
@@ -327,11 +327,12 @@ export default function Home() {
             </>
           )}
           {opponentCode ? (
-            <p className="w-full my-2 text-center font-mono text-sm">
-              We&nbsp;re loading your game with{" "}
-              <code className="w-full my-2 text-center text-sm">{opponentCode}</code>.
-            </p>
-          ) : (
+              <p className="w-full my-2 text-center font-mono text-sm">
+                We're loading your game with
+                <code className="w-full my-2 text-center text-sm">{opponentCode}</code>. 
+                Make sure your opponent has the app open.
+              </p>
+            ) : (
             <p className="w-full my-2 text-center font-mono text-sm">
               Welcome,{" "}
               <code className="w-full my-2 text-center text-sm">
