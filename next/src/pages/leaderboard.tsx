@@ -16,7 +16,7 @@ const LeaderboardPage = ({initialData}: {initialData: Person[]}) => {
   );
 
   if (error) return <div>failed to load</div>;
-  if (isLoading) return <div>loading...</div>;
+  if (!data && isLoading) return <div>loading...</div>;
 
   return (
     <>
