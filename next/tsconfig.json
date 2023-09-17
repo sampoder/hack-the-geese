@@ -17,6 +17,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/pages/match/[person]/[opponent].tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/pages/match/[person]/[opponent].tsx", "src/components/Html5QrcodePlugin.jsx"],
   "exclude": ["node_modules"]
 }

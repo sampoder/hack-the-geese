@@ -17,101 +17,99 @@ export default function Home() {
   const [gameState, setGameState] = useState<string | null>("authentication");
   const [winningPhoto, setWinningPhoto] = useState<string | null>(null);
   const [opponentCode, setOpponentCode] = useState<string | null>(null);
-  const [user, setUser] = useState<string>(null);
+  const [user, setUser] = useState<string>();
   const camera = useRef<any>(null);
   const [image, setImage] = useState(null);
   const [uploaded, setUploaded] = useState(false);
-  
+
   const router = useRouter();
- 
+
   const [ws, setWS] = useState<WebSocket>();
-  
+
   function handleOnMessage(msg: any) {
     try {
-      const message = JSON.parse(msg.data)
-      console.log(message)
-      console.log(message.action)
-      if(message.action == "new_player_connected"){
-        if(message.origin == scannedCode){
-          setUser(scannedCode);
+      const message = JSON.parse(msg.data);
+      console.log(message);
+      if (message.action == "new_player_connected") {
+        if (message.origin == scannedCode) {
+          setUser(scannedCode || "");
           // setGameState("geese")
-          setGameState("ready")
+          setGameState("ready");
         }
-      }
-      else if (message.action == "player_connected") {
-        if(message.origin == scannedCode){
+      } else if (message.action == "player_connected") {
+        if (message.origin == scannedCode) {
           setUser(message.origin);
-          setGameState("ready")
+          setGameState("ready");
         }
-      }
-      else if (message.action == "waiting_for_opponent") {
-          if(message.target == user){
-            setOpponentCode(message.origin)
-            ws.send(JSON.stringify({"action": "opponent_ready", "origin": user, "target": message.origin, "battle": message.battle}))
-          }
-      }
-      else if (message.action == "opponent_ready") {
-          if(message.target == user || message.origin == user){
-            console.log("REMATCH")
-            setCurrentBattle(message.battle)
-            setCurrentPrompt(message.prompt)
-            setImage(null)
-            setGameState("playing")
-          }
-      }
-      else if (message.action == "submission") {
-        if(message.battle == currentBattle){
-          if(message.origin == user){
-            setGameState("won")
+      } else if (message.action == "waiting_for_opponent") {
+        if (message.target == user) {
+          setOpponentCode(message.origin);
+          ws!.send(
+            JSON.stringify({
+              action: "opponent_ready",
+              origin: user,
+              target: message.origin,
+              battle: message.battle,
+            })
+          );
+        }
+      } else if (message.action == "opponent_ready") {
+        if (message.target == user || message.origin == user) {
+          console.log("REMATCH");
+          setCurrentBattle(message.battle);
+          setCurrentPrompt(message.prompt);
+          setImage(null);
+          setGameState("playing");
+        }
+      } else if (message.action == "submission") {
+        if (message.battle == currentBattle) {
+          if (message.origin == user) {
+            setGameState("won");
             setUploaded(true);
-            setWinningPhoto(message.attachment)
-          }
-          else {
-            setGameState("lost")
-            setWinningPhoto(message.attachment)
+            setWinningPhoto(message.attachment);
+          } else {
+            setGameState("lost");
+            setWinningPhoto(message.attachment);
           }
         }
-      }
-      else if (message.action == "rematch_request") {
-        if(message.target == user){
-          setGameState("rematch_requested")
+      } else if (message.action == "rematch_request") {
+        if (message.target == user) {
+          setGameState("rematch_requested");
           if (true) {
-            ws.send(JSON.stringify({"action": "rematch_consent", "origin": user, "target": opponentCode}))
+            ws!.send(
+              JSON.stringify({ action: "rematch_consent", origin: user, target: opponentCode })
+            );
           }
         }
+      } else if (message.action == "game_ended") {
+        setGameState("ready");
+        setOpponentCode(null);
       }
-      else if (message.action == "game_ended") {
-        setGameState("ready")
-        setOpponentCode(null)
-      }
-    }
-    catch(e){
-      console.log(msg)
-      console.error(e)
+    } catch (e) {
+      console.log(msg);
+      console.error(e);
     }
   }
-  
+
   const uploadImage = async (image: string) => {
     const base64Response = await fetch(image);
     const blob = await base64Response.blob();
-  
+
     const uploaded = await upload(`prompt-${Math.random()}.png`, blob, {
       access: "public",
       handleUploadUrl: "/api/upload",
     });
-  
-    ws.send(
-      JSON.stringify(
-        {
-          "action": "submission", 
-          "origin": user, 
-          "battle": currentBattle, 
-          "attachment": uploaded.url 
-        }
-      )
-    )      
+
+    ws!.send(
+      JSON.stringify({
+        action: "submission",
+        origin: user,
+        battle: currentBattle,
+        attachment: uploaded.url,
+      })
+    );
   };
-  
+
   useEffect(() => {
       const newWS = new WebSocket("ws://shy-frost-9467.fly.dev:80/handler")
       newWS.onerror = err => console.error(err);
@@ -119,37 +117,38 @@ export default function Home() {
         setWS(newWS);
       }
       newWS.onmessage = msg => handleOnMessage(msg);
-      
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   
   useEffect(() => {
-    if(ws){
-      let newWS = ws
-      newWS.onmessage = msg => handleOnMessage(msg);
-      setWS(newWS) 
+    if (ws) {
+      let newWS = ws;
+      newWS.onmessage = (msg) => handleOnMessage(msg);
+      setWS(newWS);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scannedCode, currentBattle, currentPrompt, opponentCode, user]);
-  
+
   useEffect(() => {
-    if(ws && scannedCode){
-      ws.send(JSON.stringify({ action: "player_join", origin: scannedCode }));    
+    if (ws && scannedCode) {
+      ws.send(JSON.stringify({ action: "player_join", origin: scannedCode }));
     }
-  }, [scannedCode]);
-  
+  }, [scannedCode, ws]);
+
   useEffect(() => {
-    if(ws && opponentCode){
+    if (ws && opponentCode) {
       ws.send(JSON.stringify({ action: "new_battle", origin: user, target: opponentCode }));
     }
-  }, [opponentCode]);
+  }, [opponentCode, user, ws]);
 
-  switch(gameState) {
-    case 'authentication':
+  switch (gameState) {
+    case "authentication":
       return (
         <main
           className={`flex min-h-screen flex-col items-center justify-between py-12 px-6 ${inter.className}`}
         >
-          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm flex">
-            <p className="fixed px-6 left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+          <div className="flex justify-center z-10 max-w-5xl w-full items-center lg:justify-between font-mono text-sm">
+            <p className="flex justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-auto rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
               Get started by scanning&nbsp;
               <code className="font-mono font-bold">your QR code</code>
             </p>
@@ -159,7 +158,32 @@ export default function Home() {
           </div>
           {scannedCode}
           <QrReader
-            constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
+            scanDelay={0}
+            constraints={{
+              aspectRatio: { exact: 1 },
+              facingMode: { ideal: "environment" },
+              frameRate: 30,
+            }}
+            containerStyle={{
+              maxWidth: 500,
+              maxHeight: 500,
+              width: "100vw",
+              height: "100vh",
+              margin: 24,
+            }}
+            videoContainerStyle={{
+              maxWidth: 500,
+              maxHeight: 500,
+              width: "100vw",
+              height: "100vh",
+            }}
+            videoStyle={{
+              maxWidth: 500,
+              width: "100vw",
+              maxHeight: 500,
+              height: "100vh",
+            }}
+            ViewFinder={ViewFinder}
             onResult={(result) => {
               if (!result) return;
               const code = result.getText().split("/").slice(-1)[0];
@@ -168,19 +192,12 @@ export default function Home() {
               }
               if (code != scannedCode) {
                 setScannedCode(code);
+                toast.success("QR code scanned, your code is: " + code, { duration: 5000 });
               }
-            }}
-            containerStyle={{
-              maxWidth: 500,
-              width: 500,
-              maxHeight: 500,
-              height: 500,
-              padding: 0,
-              margin: 24,
             }}
           />
 
-          {false && 
+          {false && (
             <>
               <button
                 onClick={() => {
@@ -195,7 +212,7 @@ export default function Home() {
               >
                 Sam&apos;s QR Code
               </button>
-    
+
               <button
                 onClick={() => {
                   const code = "countess-polo-reward-claw";
@@ -203,7 +220,7 @@ export default function Home() {
                     return toast.error("Invalid QR code");
                   }
                   // if (code === user) return;
-                  ws.send(JSON.stringify({ action: "player_join", origin: code }));
+                  ws!.send(JSON.stringify({ action: "player_join", origin: code }));
                   if (code != scannedCode) {
                     setScannedCode(code);
                   }
@@ -211,28 +228,29 @@ export default function Home() {
               >
                 Fayd&apos;s QR Code
               </button>
-            </>   
-          }
-          
+            </>
+          )}
+
           {user && (
             <p className="w-full my-2 text-center font-mono text-sm">
-              Welcome,{' '}
+              Welcome,{" "}
               <code className="w-full my-2 text-center text-sm">
                 <i>{user}</i>
-              </code>.
+              </code>
+              .
             </p>
           )}
-          
+
           <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left"></div>
         </main>
       );
-    case 'ready':
+    case "ready":
       return (
         <main
           className={`flex min-h-screen flex-col items-center justify-between py-12 px-6 ${inter.className}`}
         >
-          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm flex">
-            <p className="fixed px-6 left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+          <div className="flex justify-center z-10 max-w-5xl w-full items-center lg:justify-between font-mono text-sm">
+            <p className="border-b text-center border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-auto rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
               Awesome! Now scan&nbsp;
               <code className="font-mono font-bold">a person&apos;s QR code</code>
             </p>
@@ -242,7 +260,32 @@ export default function Home() {
           </div>
 
           <QrReader
-            constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
+            scanDelay={0}
+            constraints={{
+              aspectRatio: { exact: 1 },
+              facingMode: { ideal: "environment" },
+              frameRate: 30,
+            }}
+            containerStyle={{
+              maxWidth: 500,
+              maxHeight: 500,
+              width: "100vw",
+              height: "100vh",
+              margin: 24,
+            }}
+            videoContainerStyle={{
+              maxWidth: 500,
+              maxHeight: 500,
+              width: "100vw",
+              height: "100vh",
+            }}
+            videoStyle={{
+              maxWidth: 500,
+              width: "100vw",
+              maxHeight: 500,
+              height: "100vh",
+            }}
+            ViewFinder={ViewFinder}
             onResult={(result) => {
               if (!result) return;
               const code = result.getText().split("/").slice(-1)[0];
@@ -251,17 +294,10 @@ export default function Home() {
               }
               if (code === user) return;
               setOpponentCode(code);
-            }}
-            containerStyle={{
-              maxWidth: 500,
-              width: 500,
-              maxHeight: 500,
-              height: 500,
-              padding: 0,
-              margin: 24,
+              toast.success("QR code scanned, opponent code is: " + code, { duration: 5000 });
             }}
           />
-          {false && 
+          {false && (
             <>
               <button
                 onClick={() => {
@@ -275,7 +311,7 @@ export default function Home() {
               >
                 Sam&apos;s QR Code
               </button>
-    
+
               <button
                 onClick={() => {
                   const code = "countess-polo-reward-claw";
@@ -289,7 +325,7 @@ export default function Home() {
                 Fayd&apos;s QR Code
               </button>
             </>
-          }
+          )}
           {opponentCode ? (
               <p className="w-full my-2 text-center font-mono text-sm">
                 We're loading your game with
@@ -298,39 +334,35 @@ export default function Home() {
               </p>
             ) : (
             <p className="w-full my-2 text-center font-mono text-sm">
-              Welcome,{' '}
+              Welcome,{" "}
               <code className="w-full my-2 text-center text-sm">
                 <i>{user}</i>
-              </code>.
+              </code>
+              .
             </p>
           )}
 
           <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left"></div>
         </main>
       );
-    case 'playing':
+    case "playing":
       return (
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
         >
-          <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm flex">
-            Hack the Geese
-            <div className="fixed bottom-0 left-0 flex w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-              By Deet, Fayd, and Sam.
-            </div>
-          </div>
-      
+          <h1 className="text-4xl font-bold text-center">Hack the Geese</h1>
+
           <div className="flex items-center justify-evenly w-full">
             <p className="flex-1 my-2 text-center font-mono text-sm">
               You: <code>{user}</code> {currentBattle}
             </p>
-      
+
             <p className="flex-1 my-2 text-center font-mono text-sm">
               Opponent: <code>{opponentCode}</code>
             </p>
           </div>
-      
-          <div className="flex items-center justify-evenly w-full">
+
+          <div className="flex sm:items-center justify-evenly w-full gap-2 flex-col sm:flex-row items-stretch">
             <p className="flex justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-auto rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
               This is the prompt: Do this do that
             </p>
@@ -341,7 +373,7 @@ export default function Home() {
               Take photo
             </button>
           </div>
-      
+
           {image ? (
             <>
               <Image width={500} height={500} src={image || ""} alt="Taken photo" />
@@ -368,8 +400,8 @@ export default function Home() {
             />
           )}
         </main>
-      )  
-    case 'won':
+      );
+    case "won":
       return (
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
@@ -380,23 +412,25 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-        
+
           <div className="flex items-center justify-evenly w-full">
             <p className="flex-1 my-2 text-center font-mono text-sm">
               You: <code>{router.query.person}</code>
             </p>
-        
+
             <p className="flex-1 my-2 text-center font-mono text-sm">
               Opponent: <code>{router.query.opponent}</code>
             </p>
           </div>
-        
+
           <h1 className="text-4xl font-bold text-center">Sweet! You win this round!</h1>
           <div className="flex items-center justify-center gap-2">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
-                ws.send(JSON.stringify({"action": "rematch_request", "origin": user, "target": opponentCode}))
+                ws!.send(
+                  JSON.stringify({ action: "rematch_request", origin: user, target: opponentCode })
+                );
               }}
             >
               Rematch
@@ -404,17 +438,19 @@ export default function Home() {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
-                setGameState("ready")
-                setOpponentCode(null)
-                ws.send(JSON.stringify({"action": "game_ended", "origin": user, "target": opponentCode}))
+                setGameState("ready");
+                setOpponentCode(null);
+                ws!.send(
+                  JSON.stringify({ action: "game_ended", origin: user, target: opponentCode })
+                );
               }}
             >
               Play again
             </button>
           </div>
         </main>
-      )
-      case 'lost':
+      );
+    case "lost":
       return (
         <main
           className={`flex min-h-screen flex-col items-center gap-10 py-12 px-6 ${inter.className}`}
@@ -425,23 +461,25 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-        
+
           <div className="flex items-center justify-evenly w-full">
             <p className="flex-1 my-2 text-center font-mono text-sm">
               You: <code>{router.query.person}</code>
             </p>
-        
+
             <p className="flex-1 my-2 text-center font-mono text-sm">
               Opponent: <code>{router.query.opponent}</code>
             </p>
           </div>
-        
+
           <h1 className="text-4xl font-bold text-center">oh no, you lost</h1>
           <div className="flex items-center justify-center gap-2">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => {
-                ws.send(JSON.stringify({"action": "rematch_request", "origin": user, "target": opponentCode}))
+                ws!.send(
+                  JSON.stringify({ action: "rematch_request", origin: user, target: opponentCode })
+                );
               }}
             >
               Rematch
@@ -454,8 +492,67 @@ export default function Home() {
             </button>
           </div>
         </main>
-      )
+      );
   }
-
-  
 }
+
+const ViewFinder = (props: any) => (
+  <div
+    style={{
+      zIndex: 100,
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "50%",
+      height: "50%",
+      borderRadius: "10px",
+      ...props.style,
+    }}
+  >
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "10%",
+        height: "10%",
+        borderLeft: "2px solid white",
+        borderTop: "2px solid white",
+      }}
+    />
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        width: "10%",
+        height: "10%",
+        borderRight: "2px solid white",
+        borderTop: "2px solid white",
+      }}
+    />
+    <div
+      style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        width: "10%",
+        height: "10%",
+        borderLeft: "2px solid white",
+        borderBottom: "2px solid white",
+      }}
+    />
+    <div
+      style={{
+        position: "absolute",
+        bottom: 0,
+        right: 0,
+        width: "10%",
+        height: "10%",
+        borderRight: "2px solid white",
+        borderBottom: "2px solid white",
+      }}
+    />
+  </div>
+);
