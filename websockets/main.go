@@ -204,6 +204,14 @@ func main() {
 									log.Println("Error updating battle: ", err)
 								}
 							}
+							_, err = client.Player.FindUnique(
+								db.Player.ID.Equals(event.Origin),
+							).Update(
+								db.Player.Score.Increment(1),
+							).Exec(ctx)
+							if err != nil {
+								log.Println("Error updating player: ", err)
+							}
 							err = wsutil.WriteServerMessage(conn, ws.OpText, currentMsg)
 							if err != nil {
 								log.Println("Error writing WebSocket data: ", err)
