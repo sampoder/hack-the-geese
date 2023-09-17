@@ -25,3 +25,12 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+#geese-container-nav > svg {
+  height: 36px;
+  transform: translateY(-8px);
+}
+
+#geese-container-nav {
+  margin-right: 16px;
+}
