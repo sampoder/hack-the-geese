@@ -5,6 +5,7 @@ import useSWR from "swr";
 type Person = {
   id: string;
   score: number;
+  goose: string;
   _count: { initiatedBattles: number; invitedToBattles: number };
 };
 
@@ -55,7 +56,7 @@ const LeaderboardPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-600">
-                    {data && data.filter(x => x.id).map((person: Person)=> (
+                    {data && data.filter((x: Person) => x.id).map((person: Person)=> (
                       <tr key={person.id}>
                         <td className="whitespace-nowrap py-4 pl-4 flex pr-3 text-sm font-medium items-center justify-start text-gray-900 sm:pl-6 dark:text-gray-100" style={{ gap: '16px'}}>
                           {person.goose ? 

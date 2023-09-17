@@ -10,7 +10,7 @@ const randomHexColor = () => {
   return color;
 };
 
-const changeColorOfGroups = (groupIds: any, parentID) => {
+const changeColorOfGroups = (groupIds: any, parentID: any) => {
   let hexes: string[] = []
   groupIds.forEach((id:any) => {
     const element = document.getElementById(parentID ? `${parentID}-${id}` : id);
