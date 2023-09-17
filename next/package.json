@@ -31,6 +31,7 @@
     "use-local-storage-state": "^19.0.4"
   },
   "devDependencies": {
-    "prisma": "^5.3.1"
+    "prisma": "^5.3.1",
+    "tailwindcss-animate": "^1.0.7"
   }
 }

@@ -1,13 +1,12 @@
-import { QrReader } from "react-qr-reader";
-import { Inter } from "next/font/google";
-import { useRouter } from "next/router";
-import { useEffect, useState, useRef } from "react";
-import toast from "react-hot-toast";
-import useLocalStorageState from "use-local-storage-state";
 import { upload } from "@vercel/blob/client";
+import { Inter } from "next/font/google";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
 import { Camera } from "react-camera-pro";
-import Link from "next/link"
+import toast from "react-hot-toast";
+import { QrReader } from "react-qr-reader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,7 +33,7 @@ export default function Home() {
       if (message.action == "new_player_connected") {
         if (message.origin == scannedCode) {
           setUser(scannedCode || "");
-          setGameState("geese")
+          setGameState("geese");
         }
       } else if (message.action == "player_connected") {
         if (message.origin == scannedCode) {
@@ -75,26 +74,42 @@ export default function Home() {
       } else if (message.action == "rematch_request") {
         if (message.target == user) {
           setGameState("rematch_requested");
-          toast((t) => (
-            <span>
-              {message.origin} wants a rematch!
-              <button onClick={() => toast.dismiss(t.id)}>Nah, gotta go</button>
-              <button
-                onClick={() => {
-                  ws!.send(
-                    JSON.stringify({
-                      action: "rematch_consent",
-                      origin: user,
-                      target: opponentCode,
-                    })
-                  );
-                  toast.dismiss(t.id);
-                }}
+
+          toast.custom(
+            (t) => (
+              <div
+                className={`${
+                  t.visible ? "animate-in" : "animate-out"
+                } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-opacity-5`}
               >
-                Sure, let&apos;s do it
-              </button>
-            </span>
-          ));
+                <p className="text-gray-900 p-3">{message.origin} wants a rematch! ⚔️</p>
+                <div className="flex items-center justify-center">
+                  <button
+                    className="flex-1 bg-red-500 w-fit hover:bg-red-700 text-white font-medium py-2 px-4 border rounded-bl-lg"
+                    onClick={() => toast.dismiss(t.id)}
+                  >
+                    Nah, gotta go
+                  </button>
+                  <button
+                    className="flex-1 bg-blue-500 w-fit hover:bg-blue-700 text-white font-medium py-2 px-4 border rounded-br-lg"
+                    onClick={() => {
+                      ws!.send(
+                        JSON.stringify({
+                          action: "rematch_consent",
+                          origin: user,
+                          target: opponentCode,
+                        })
+                      );
+                      toast.dismiss(t.id);
+                    }}
+                  >
+                    let&apos;s do it!
+                  </button>
+                </div>
+              </div>
+            ),
+            { duration: 10000 }
+          );
         }
       } else if (message.action == "game_ended") {
         setGameState("ready");
@@ -133,15 +148,15 @@ export default function Home() {
   };
 
   useEffect(() => {
-      const newWS = new WebSocket("wss://shy-frost-9467.fly.dev:443/handler")
-      newWS.onerror = err => console.error(err);
-      newWS.onopen = () => {
-        setWS(newWS);
-      }
-      newWS.onmessage = msg => handleOnMessage(msg);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  
+    const newWS = new WebSocket("wss://shy-frost-9467.fly.dev:443/handler");
+    newWS.onerror = (err) => console.error(err);
+    newWS.onopen = () => {
+      setWS(newWS);
+    };
+    newWS.onmessage = (msg) => handleOnMessage(msg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (ws) {
       let newWS = ws;
@@ -173,9 +188,16 @@ export default function Home() {
             <p className="border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-auto rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
               Get started by scanning your QR code
             </p>
-            <div className="fixed bottom-0 left-0 flex h-24 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none pb-8 md:pb-0 bold" style={{gap: '16px'}}>
-              <Link href="/album" className="underline hover:text-purple-400">Album</Link>
-              <Link href="/leaderboard" className="underline hover:text-purple-400">Leaderboard</Link>
+            <div
+              className="fixed bottom-0 left-0 flex h-24 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none pb-8 md:pb-0 bold"
+              style={{ gap: "16px" }}
+            >
+              <Link href="/album" className="underline hover:text-purple-400">
+                Album
+              </Link>
+              <Link href="/leaderboard" className="underline hover:text-purple-400">
+                Leaderboard
+              </Link>
             </div>
           </div>
           {scannedCode}
@@ -214,7 +236,10 @@ export default function Home() {
               }
               if (code != scannedCode) {
                 setScannedCode(code);
-                toast.success("QR code scanned, your code is: " + code, { id: 'scan_self', duration: 5000 });
+                toast.success("QR code scanned, your code is: " + code, {
+                  id: "scan_self",
+                  duration: 5000,
+                });
               }
             }}
           />
@@ -315,7 +340,10 @@ export default function Home() {
               }
               if (code === user) return;
               setOpponentCode(code);
-              toast.success("QR code scanned, opponent code is: " + code, { id: 'scan_opponent', duration: 5000 });
+              toast.success("QR code scanned, opponent code is: " + code, {
+                id: "scan_opponent",
+                duration: 5000,
+              });
             }}
           />
           {false && (
@@ -348,12 +376,12 @@ export default function Home() {
             </>
           )}
           {opponentCode ? (
-              <p className="w-full my-2 text-center font-mono text-sm">
-                We're loading your game with
-                <code className="w-full my-2 text-center text-sm">{opponentCode}</code>. 
-                Make sure your opponent has the app open.
-              </p>
-            ) : (
+            <p className="w-full my-2 text-center font-mono text-sm">
+              We're loading your game with
+              <code className="w-full my-2 text-center text-sm">{opponentCode}</code>. Make sure
+              your opponent has the app open.
+            </p>
+          ) : (
             <p className="w-full my-2 text-center font-mono text-sm">
               Welcome,{" "}
               <code className="w-full my-2 text-center text-sm">
@@ -367,7 +395,7 @@ export default function Home() {
         </main>
       );
     case "geese":
-      return <GeeseComponent ws={ws} user={user} />
+      return <GeeseComponent ws={ws} user={user} />;
     case "playing":
       return (
         <main
@@ -499,8 +527,8 @@ export default function Home() {
 }
 
 const randomHexColor = () => {
-  const letters = '0123456789ABCDEF';
-  let color = '#';
+  const letters = "0123456789ABCDEF";
+  let color = "#";
   for (let i = 0; i < 6; i++) {
     color += letters[Math.floor(Math.random() * 16)];
   }
@@ -508,42 +536,44 @@ const randomHexColor = () => {
 };
 
 const changeColorOfGroups = (groupIds: any) => {
-  let hexes: string[] = []
-  groupIds.forEach((id:any) => {
+  let hexes: string[] = [];
+  groupIds.forEach((id: any) => {
     const element = document.getElementById(id);
     if (element) {
       element.childNodes.forEach((child) => {
         if (child instanceof Element) {
-          if (id === 'white') {
-            child.setAttribute('fill', '#FFFFFF');
+          if (id === "white") {
+            child.setAttribute("fill", "#FFFFFF");
           } else {
-            let hex = randomHexColor()
-            child.setAttribute('fill', hex);
-            hexes.push(hex)
+            let hex = randomHexColor();
+            child.setAttribute("fill", hex);
+            hexes.push(hex);
           }
         }
       });
     }
   });
-  return hexes
+  return hexes;
 };
 
 const changeBackgroundColor = () => {
   document.body.style.backgroundColor = randomHexColor();
 };
 
-const GeeseComponent = ({ws, user}: any) => {
+const GeeseComponent = ({ ws, user }: any) => {
   const [hexes, setHexes] = useState<string[] | null>(null);
-    
+
   useEffect(() => {
-    fetch('geese.svg')
-      .then(response => response.text())
-      .then(data => {
-        const container = document.getElementById('geese-container');
+    fetch("geese.svg")
+      .then((response) => response.text())
+      .then((data) => {
+        const container = document.getElementById("geese-container");
         if (container) {
           container.innerHTML = data;
           // Change colors and background immediately upon loading
-          setHexes(changeColorOfGroups(['fur1', 'fur2', 'shadow', 'white', 'feet', 'svg-background']));
+          setHexes(
+            changeColorOfGroups(["fur1", "fur2", "shadow", "white", "feet", "svg-background"])
+          );
           changeBackgroundColor();
         }
       });
@@ -559,27 +589,32 @@ const GeeseComponent = ({ws, user}: any) => {
           By Deet, Fayd, and Sam.
         </div>
       </div>
-    
-      <div id="geese-container" style={{ backgroundColor: 'white', height: '400px', width: '400px', borderRadius: '8px' }}></div>
-      
+
+      <div
+        id="geese-container"
+        style={{ backgroundColor: "white", height: "400px", width: "400px", borderRadius: "8px" }}
+      ></div>
+
       <div className="flex items-center justify-center gap-2">
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={() => {
-            // @ts-ignore
-            var s = new XMLSerializer().serializeToString(document.querySelector("#geese-container > svg"))
-            var encodedData = window.btoa(s);
-            ws.send(
-              JSON.stringify({ action: "set_goose", origin: user, goose: encodedData })
+            var s = new XMLSerializer().serializeToString(
+              // @ts-ignore
+              document.querySelector("#geese-container > svg")
             );
+            var encodedData = window.btoa(s);
+            ws.send(JSON.stringify({ action: "set_goose", origin: user, goose: encodedData }));
           }}
         >
           Save My Goose
         </button>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => { 
-            setHexes(changeColorOfGroups(['fur1', 'fur2', 'shadow', 'white', 'feet', 'svg-background'])); 
+          onClick={() => {
+            setHexes(
+              changeColorOfGroups(["fur1", "fur2", "shadow", "white", "feet", "svg-background"])
+            );
             changeBackgroundColor();
           }}
         >
@@ -587,15 +622,13 @@ const GeeseComponent = ({ws, user}: any) => {
         </button>
       </div>
       <style>
-        {
-          `
+        {`
           svg {
             height: 100%;
             padding: 24px 
           }
           
-          `
-        }
+          `}
       </style>
     </main>
   );
