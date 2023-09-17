@@ -53,7 +53,7 @@ const AlbumPage = () => {
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 place-items-center">
             {data &&
               data.map((album: any, i: number) => (
-                <Image key={i} src={album.winningPhoto} alt="photo" width={300} height={300} />
+                <img key={i} src={album.winningPhoto} alt="photo" width={300} height={300} />
               ))}
           </div>
         </div>
@@ -64,7 +64,7 @@ const AlbumPage = () => {
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 place-items-center">
             {data &&
               data.map((album: any, i: number) => (
-                <Image key={i} src={album.winningPhoto} alt="photo" width={300} height={300} />
+                <img key={i} src={album.winningPhoto} alt="photo" width={300} height={300} />
               ))}
           </div>
         </div>
