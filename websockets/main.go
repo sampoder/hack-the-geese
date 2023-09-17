@@ -81,7 +81,7 @@ func main() {
 							player, err := client.Player.FindFirst(
 								db.Player.ID.Equals(event.Origin),
 							).Exec(ctx)
-							if errors.Is(err, db.ErrNotFound) {
+							if errors.Is(err, db.ErrNotFound) || player.Goose == nil {
 								_, err := client.Player.CreateOne(
 									db.Player.ID.Set(event.Origin),
 									db.Player.Score.Set(0),
