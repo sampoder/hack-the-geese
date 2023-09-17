@@ -1,6 +1,7 @@
 import Navbar, { GeeseComponent } from "@/components/Navbar";
 import React, { useState } from "react";
 import useSWR from "swr";
+import prisma from "@/utils/db";
 
 type Person = {
   id: string;
@@ -9,8 +10,8 @@ type Person = {
   _count: { initiatedBattles: number; invitedToBattles: number };
 };
 
-const LeaderboardPage = () => {
-  const { data, error, isLoading } = useSWR("/api/leaderboard", (...args) =>
+const LeaderboardPage = ({initialData}) => {
+  const { data, error, isLoading } = useSWR("/api/leaderboard", {fallbackData: initialData}, (...args) =>
     fetch(...args).then((res) => res.json())
   );
 
@@ -20,7 +21,6 @@ const LeaderboardPage = () => {
   return (
     <>
       <Navbar />
-      
       <div className="px-4 sm:px-6 lg:px-8 p-6 max-w-full overflow-x-scroll">
           <h1 className="text-3xl mt-4 font-bold leading-6 text-center w-full">The Leaderboard</h1>
           <div className="mx-auto mt-4 flex justify-center max-w-full overflow-x-scroll">
@@ -102,5 +102,15 @@ const LeaderboardPage = () => {
     </>
   );
 };
+
+export const getStaticProps = (async (context) => {
+  const leaderboard = await prisma.player.findMany({
+    orderBy: { score: "desc" },
+    include: { _count: { select: { initiatedBattles: true, invitedToBattles: true } } },
+  });
+  return { props: { initialData: leaderboard }, revalidate: 60 }
+}) satisfies GetStaticProps<{
+  initialData: Person[]
+}>
 
 export default LeaderboardPage;
