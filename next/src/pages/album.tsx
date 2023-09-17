@@ -67,7 +67,7 @@ const AlbumPage = ({initialData}: any) => {
           {isLoading && <div>loading...</div>}
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 place-items-center">
             {data &&
-              data.toReversed().map((album: any, i: number) => (
+              data.reverse().map((album: any, i: number) => (
                 <img key={i} src={album.winningPhoto} alt="photo" width={300} height={300} />
               ))}
           </div>
