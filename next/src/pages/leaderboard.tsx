@@ -10,9 +10,9 @@ type Person = {
   _count: { initiatedBattles: number; invitedToBattles: number };
 };
 
-const LeaderboardPage = ({initialData}) => {
-  const { data, error, isLoading } = useSWR("/api/leaderboard", {fallbackData: initialData}, (...args) =>
-    fetch(...args).then((res) => res.json())
+const LeaderboardPage = ({initialData}: {initialData: Person[]}) => {
+  const { data, error, isLoading } = useSWR("/api/leaderboard", (...args) =>
+    fetch(...args).then((res) => res.json()), {fallbackData: initialData}
   );
 
   if (error) return <div>failed to load</div>;
@@ -103,14 +103,12 @@ const LeaderboardPage = ({initialData}) => {
   );
 };
 
-export const getStaticProps = (async (context) => {
+export const getStaticProps = (async (context: any) => {
   const leaderboard = await prisma.player.findMany({
     orderBy: { score: "desc" },
     include: { _count: { select: { initiatedBattles: true, invitedToBattles: true } } },
   });
   return { props: { initialData: leaderboard }, revalidate: 60 }
-}) satisfies GetStaticProps<{
-  initialData: Person[]
-}>
+})
 
 export default LeaderboardPage;
