@@ -435,17 +435,6 @@ export default function Home() {
               By Deet, Fayd, and Sam.
             </div>
           </div>
-
-          <div className="flex items-center justify-evenly w-full">
-            <p className="flex-1 my-2 text-center font-mono text-sm">
-              You: <code>{router.query.person}</code>
-            </p>
-
-            <p className="flex-1 my-2 text-center font-mono text-sm">
-              Opponent: <code>{router.query.opponent}</code>
-            </p>
-          </div>
-
           <h1 className="text-4xl font-bold text-center">Sweet! You win this round!</h1>
           <div className="flex items-center justify-center gap-2">
             <button
@@ -483,16 +472,6 @@ export default function Home() {
             <div className="fixed bottom-0 left-0 flex w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
               By Deet, Fayd, and Sam.
             </div>
-          </div>
-
-          <div className="flex items-center justify-evenly w-full">
-            <p className="flex-1 my-2 text-center font-mono text-sm">
-              You: <code>{router.query.person}</code>
-            </p>
-
-            <p className="flex-1 my-2 text-center font-mono text-sm">
-              Opponent: <code>{router.query.opponent}</code>
-            </p>
           </div>
 
           <h1 className="text-4xl font-bold text-center">oh no, you lost</h1>
