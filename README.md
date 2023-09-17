@@ -61,3 +61,7 @@ We learned that making friends is just as crucial as writing good code. The jour
 ## Oh and one more thing.
 
 Turns out we were finalists! Yay!
+
+<img src="https://github.com/sampoder/hack-the-geese/assets/39828164/04ad88ce-f5a5-4972-ba1e-9d2288a651e9" height="300px" /> <img src="https://github.com/sampoder/hack-the-geese/assets/39828164/2aaf42d3-3d4c-4a93-bea4-4c6b212b3905" height="300px" />
+
+_(that's us moments after we found out and then when we were presenting on stage)_
