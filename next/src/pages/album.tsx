@@ -4,7 +4,7 @@ import useSWR from "swr";
 import useLocalStorageState from "use-local-storage-state";
 import Image from "next/image";
 
-const AlbumPage = () => {
+const AlbumPage = ({initialData}) => {
   const [tabs, setTabs] = useState([
     { name: "My Album", current: true },
     { name: "Global Album", current: false },
@@ -15,6 +15,7 @@ const AlbumPage = () => {
 
   const { data, error, isLoading } = useSWR(
     currentTab === 0 && false ? `/api/album/${user}` : "/api/album",
+    { fallbackData: initialData },
     (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
   );
 
@@ -73,5 +74,13 @@ const AlbumPage = () => {
     </>
   );
 };
+
+export const getStaticProps = (async (context) => {
+  const album = await prisma.battle.findMany({
+    where: { winningPhoto: { not: null } },
+    select: { winningPhoto: true },
+  });
+  return { props: { initialData: album }, revalidate: 60 }
+})
 
 export default AlbumPage;
