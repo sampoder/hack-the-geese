@@ -14,13 +14,15 @@ const AlbumPage = () => {
   const [user] = useLocalStorageState<string>("user");
 
   const { data, error, isLoading } = useSWR(
-    currentTab === 0 && user ? `/api/album/${user}` : "/api/album",
+    currentTab === 0 && false ? `/api/album/${user}` : "/api/album",
     (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
   );
 
   return (
     <>
       <Navbar />
+        
+      {false && 
       <div className="px-4 py-6 flex justify-center">
         <nav className="flex border-white/10 py-4 justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-fit rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
           <ul
@@ -38,9 +40,9 @@ const AlbumPage = () => {
             ))}
           </ul>
         </nav>
-      </div>
+      </div>}
 
-      {currentTab === 0 ? (
+      {false && (
         <div className="p-6">
           {error && <div>failed to load</div>}
           {isLoading && <div>loading...</div>}
@@ -56,8 +58,8 @@ const AlbumPage = () => {
                 <img key={i} src={album.winningPhoto} alt="photo" width={300} height={300} />
               ))}
           </div>
-        </div>
-      ) : (
+        </div>)
+      }
         <div className="p-6">
           {error && <div>failed to load</div>}
           {isLoading && <div>loading...</div>}
@@ -68,7 +70,6 @@ const AlbumPage = () => {
               ))}
           </div>
         </div>
-      )}
     </>
   );
 };
