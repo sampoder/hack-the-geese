@@ -546,7 +546,7 @@ const changeColorOfGroups = (groupIds: any) => {
       });
     }
   });
-  return hexs
+  return hexes
 };
 
 const changeBackgroundColor = () => {
