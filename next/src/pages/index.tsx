@@ -17,7 +17,7 @@ export default function Home() {
   const [gameState, setGameState] = useState<string | null>("authentication");
   const [winningPhoto, setWinningPhoto] = useState<string | null>(null);
   const [opponentCode, setOpponentCode] = useState<string | null>(null);
-  const [user, setUser] = useLocalStorageState<string>("user");
+  const [user, setUser] = useState<string>(null);
   const camera = useRef<any>(null);
   const [image, setImage] = useState(null);
   const [uploaded, setUploaded] = useState(false);
@@ -33,16 +33,16 @@ export default function Home() {
       console.log(message.action)
       if(message.action == "new_player_connected"){
         if(message.origin == scannedCode){
-          setUser(scannedCode || "");
+          setUser(scannedCode);
           // setGameState("geese")
           setGameState("ready")
         }
       }
       else if (message.action == "player_connected") {
-          if(message.origin == scannedCode){
-            setUser(message.origin);
-            setGameState("ready")
-          }
+        if(message.origin == scannedCode){
+          setUser(message.origin);
+          setGameState("ready")
+        }
       }
       else if (message.action == "waiting_for_opponent") {
           if(message.target == user){
@@ -112,9 +112,6 @@ export default function Home() {
       newWS.onerror = err => console.error(err);
       newWS.onopen = () => {
         setWS(newWS);
-        if(user && !scannedCode){
-          ws.send(JSON.stringify({"action": "player_join", "origin": user}))
-        } 
       }
       newWS.onmessage = msg => handleOnMessage(msg);
       
@@ -127,6 +124,18 @@ export default function Home() {
       setWS(newWS) 
     }
   }, [scannedCode, currentBattle, currentPrompt, opponentCode, user]);
+  
+  useEffect(() => {
+    if(ws && scannedCode){
+      ws.send(JSON.stringify({ action: "player_join", origin: scannedCode }));    
+    }
+  }, [scannedCode]);
+  
+  useEffect(() => {
+    if(ws && opponentCode){
+      ws.send(JSON.stringify({ action: "new_battle", origin: user, target: opponentCode }));
+    }
+  }, [opponentCode]);
 
   switch(gameState) {
     case 'authentication':
@@ -139,23 +148,19 @@ export default function Home() {
               Get started by scanning&nbsp;
               <code className="font-mono font-bold">your QR code</code>
             </p>
-            <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none pb-4 md:pb-0">
+            <div className="fixed bottom-0 left-0 flex h-24 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none pb-8 md:pb-0 bold">
               By Deet, Fayd, and Sam.
             </div>
           </div>
-
+          {scannedCode}
           <QrReader
             constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
             onResult={(result) => {
               if (!result) return;
               const code = result.getText().split("/").slice(-1)[0];
               if (code.split("-").length !== 4) {
-                console.log("invalid")
                 return toast.error("Invalid QR code");
               }
-              console.log(code)
-              ws.send(JSON.stringify({ action: "player_join", origin: code }));
-              console.log(code)
               if (code != scannedCode) {
                 setScannedCode(code);
               }
@@ -170,51 +175,49 @@ export default function Home() {
             }}
           />
 
-          <button
-            onClick={() => {
-              const code = "pair-muskrat-sweater-tube";
-              if (code.split("-").length !== 4) {
-                return toast.error("Invalid QR code");
-              }
-              ws.send(JSON.stringify({ action: "player_join", origin: code }));
-              if (code != scannedCode) {
-                setScannedCode(code);
-              }
-            }}
-          >
-            Sam&apos;s QR Code
-          </button>
-
-          <button
-            onClick={() => {
-              const code = "countess-polo-reward-claw";
-              if (code.split("-").length !== 4) {
-                return toast.error("Invalid QR code");
-              }
-              // if (code === user) return;
-              ws.send(JSON.stringify({ action: "player_join", origin: code }));
-              if (code != scannedCode) {
-                setScannedCode(code);
-              }
-            }}
-          >
-            Fayd&apos;s QR Code
-          </button>
-
+          {true && 
+            <>
+              <button
+                onClick={() => {
+                  const code = "pair-muskrat-sweater-tube";
+                  if (code.split("-").length !== 4) {
+                    return toast.error("Invalid QR code");
+                  }
+                  if (code != scannedCode) {
+                    setScannedCode(code);
+                  }
+                }}
+              >
+                Sam&apos;s QR Code
+              </button>
+    
+              <button
+                onClick={() => {
+                  const code = "countess-polo-reward-claw";
+                  if (code.split("-").length !== 4) {
+                    return toast.error("Invalid QR code");
+                  }
+                  // if (code === user) return;
+                  ws.send(JSON.stringify({ action: "player_join", origin: code }));
+                  if (code != scannedCode) {
+                    setScannedCode(code);
+                  }
+                }}
+              >
+                Fayd&apos;s QR Code
+              </button>
+            </>   
+          }
+          
           {user && (
             <p className="w-full my-2 text-center font-mono text-sm">
-              Your code:
-              <code className="w-full my-2 text-center text-sm block">{user}</code>
+              Welcome,{' '}
+              <code className="w-full my-2 text-center text-sm">
+                <i>{user}</i>
+              </code>.
             </p>
           )}
-
-          {opponentCode && (
-            <p className="w-full my-2 text-center font-mono text-sm">
-              Scanned code:
-              <code className="w-full my-2 text-center text-sm block">{opponentCode}</code>
-            </p>
-          )}
-
+          
           <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left"></div>
         </main>
       );
@@ -228,7 +231,7 @@ export default function Home() {
               Awesome! Now scan&nbsp;
               <code className="font-mono font-bold">a person&apos;s QR code</code>
             </p>
-            <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none pb-4 md:pb-0">
+            <div className="fixed bottom-0 left-0 flex h-24 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none pb-8 md:pb-0 bold">
               By Deet, Fayd, and Sam.
             </div>
           </div>
@@ -237,17 +240,12 @@ export default function Home() {
             constraints={{ aspectRatio: { min: 1, max: 1 }, facingMode: { ideal: "environment" } }}
             onResult={(result) => {
               if (!result) return;
-
               const code = result.getText().split("/").slice(-1)[0];
               if (code.split("-").length !== 4) {
                 return toast.error("Invalid QR code");
               }
-
               if (code === user) return;
-
               setOpponentCode(code);
-
-              ws!.send(JSON.stringify({ Action: "new_battle", Origin: user, Target: code }));
             }}
             containerStyle={{
               maxWidth: 500,
@@ -258,46 +256,46 @@ export default function Home() {
               margin: 24,
             }}
           />
-
-          <button
-            onClick={() => {
-              const code = "pair-muskrat-sweater-tube";
-              if (code.split("-").length !== 4) {
-                return toast.error("Invalid QR code");
-              }
-              if (code === user) return;
-              setOpponentCode(code);
-              ws.send(JSON.stringify({ action: "new_battle", origin: user, target: code }));
-            }}
-          >
-            Sam&apos;s QR Code
-          </button>
-
-          <button
-            onClick={() => {
-              const code = "countess-polo-reward-claw";
-              if (code.split("-").length !== 4) {
-                return toast.error("Invalid QR code");
-              }
-              if (code === user) return;
-              setOpponentCode(code);
-              ws.send(JSON.stringify({ action: "new_battle", origin: user, target: code }));
-            }}
-          >
-            Fayd&apos;s QR Code
-          </button>
-
-          {user && (
+          {true && 
+            <>
+              <button
+                onClick={() => {
+                  const code = "pair-muskrat-sweater-tube";
+                  if (code.split("-").length !== 4) {
+                    return toast.error("Invalid QR code");
+                  }
+                  if (code === user) return;
+                  setOpponentCode(code);
+                }}
+              >
+                Sam&apos;s QR Code
+              </button>
+    
+              <button
+                onClick={() => {
+                  const code = "countess-polo-reward-claw";
+                  if (code.split("-").length !== 4) {
+                    return toast.error("Invalid QR code");
+                  }
+                  if (code === user) return;
+                  setOpponentCode(code);
+                }}
+              >
+                Fayd&apos;s QR Code
+              </button>
+            </>
+          }
+          {opponentCode ? (
+              <p className="w-full my-2 text-center font-mono text-sm">
+                We're loading your game with
+                <code className="w-full my-2 text-center text-sm">{opponentCode}</code>.
+              </p>
+            ) : (
             <p className="w-full my-2 text-center font-mono text-sm">
-              Your code:
-              <code className="w-full my-2 text-center text-sm block">{user}</code>
-            </p>
-          )}
-
-          {opponentCode && (
-            <p className="w-full my-2 text-center font-mono text-sm">
-              Scanned code:
-              <code className="w-full my-2 text-center text-sm block">{opponentCode}</code>
+              Welcome,{' '}
+              <code className="w-full my-2 text-center text-sm">
+                <i>{user}</i>
+              </code>.
             </p>
           )}
 
