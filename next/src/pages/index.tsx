@@ -587,6 +587,7 @@ const GeeseComponent = ({ws, user}: any) => {
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={() => {
+            // @ts-ignore
             var s = new XMLSerializer().serializeToString(document.querySelector("#geese-container > svg"))
             var encodedData = window.btoa(s);
             ws.send(
