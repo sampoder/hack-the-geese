@@ -529,7 +529,7 @@ const randomHexColor = () => {
 };
 
 const changeColorOfGroups = (groupIds: any) => {
-  let hexs = []
+  let hexes: string[] = []
   groupIds.forEach((id:any) => {
     const element = document.getElementById(id);
     if (element) {
@@ -540,7 +540,7 @@ const changeColorOfGroups = (groupIds: any) => {
           } else {
             let hex = randomHexColor()
             child.setAttribute('fill', hex);
-            hexs.push(hex)
+            hexes.push(hex)
           }
         }
       });
