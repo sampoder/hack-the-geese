@@ -387,7 +387,7 @@ export default function Home() {
 
           <div className="flex sm:items-center justify-evenly w-full gap-2 flex-col sm:flex-row items-stretch">
             <p className="flex justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:from-inherit w-auto rounded-xl border bg-gray-200 p-4 dark:bg-zinc-800/30">
-              This is the prompt: Do this do that
+              {currentPrompt}
             </p>
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"

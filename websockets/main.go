@@ -27,6 +27,31 @@ type Event struct {
 
 func main() {
 	
+	file, err := os.Open("prompts.txt")
+	
+	if err != nil {
+			fmt.Println("Error opening file:", err)
+			return
+	}
+	defer file.Close()
+	
+	scanner := bufio.NewScanner(file)
+	lines := []string{}
+	
+	for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+	}
+	
+	if err := scanner.Err(); err != nil {
+			fmt.Println("Error reading file:", err)
+			return
+	}
+	
+	if len(lines) == 0 {
+			fmt.Println("The file is empty.")
+			return
+	}
+	
 	client := db.NewClient()
 	if err := client.Prisma.Connect(); err != nil {
 		panic(err)
@@ -177,30 +202,6 @@ func main() {
 							log.Println("Error updating battle: ", event.Origin)
 
 							rand.Seed(time.Now().UnixNano())
-							file, err := os.Open("prompts.txt")
-
-							if err != nil {
-									fmt.Println("Error opening file:", err)
-									return
-							}
-							defer file.Close()
-
-							scanner := bufio.NewScanner(file)
-							lines := []string{}
-
-							for scanner.Scan() {
-									lines = append(lines, scanner.Text())
-							}
-
-							if err := scanner.Err(); err != nil {
-									fmt.Println("Error reading file:", err)
-									return
-							}
-
-							if len(lines) == 0 {
-									fmt.Println("The file is empty.")
-									return
-							}
 
 							randomIndex := rand.Intn(len(lines))
 							randomLine := lines[randomIndex]
