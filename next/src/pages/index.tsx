@@ -553,7 +553,7 @@ const changeBackgroundColor = () => {
   document.body.style.backgroundColor = randomHexColor();
 };
 
-const GeeseComponent = ({ws, user}) => {
+const GeeseComponent = ({ws: WebSocket, user: string}) => {
   const [hexes, setHexes] = useState<string[] | null>(null);
     
   useEffect(() => {
