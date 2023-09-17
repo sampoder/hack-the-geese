@@ -47,7 +47,7 @@ const AlbumPage = ({initialData}: any) => {
       {false && (
         <div className="p-6">
           {error && <div>failed to load</div>}
-          {isLoading && <div>loading...</div>}
+          {(!data && isLoading) && <div>loading...</div>}
           {data && data.length === 0 && (
             <div className="text-center">
               No Photos. <br />
