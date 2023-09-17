@@ -75,15 +75,34 @@ export default function Home() {
       } else if (message.action == "rematch_request") {
         if (message.target == user) {
           setGameState("rematch_requested");
-          if (true) {
-            ws!.send(
-              JSON.stringify({ action: "rematch_consent", origin: user, target: opponentCode })
-            );
-          }
+          toast((t) => (
+            <span>
+              {message.origin} wants a rematch!
+              <button onClick={() => toast.dismiss(t.id)}>Nah, gotta go</button>
+              <button
+                onClick={() => {
+                  ws!.send(
+                    JSON.stringify({
+                      action: "rematch_consent",
+                      origin: user,
+                      target: opponentCode,
+                    })
+                  );
+                  toast.dismiss(t.id);
+                }}
+              >
+                Sure, let&apos;s do it
+              </button>
+            </span>
+          ));
         }
       } else if (message.action == "game_ended") {
         setGameState("ready");
         setOpponentCode(null);
+      } else if (message.action == "missing_target") {
+        toast.error(
+          "Opponent hasn't signed up yet. Ask them to scan their QR code from their device."
+        );
       }
     } catch (e) {
       console.log(msg);
@@ -95,10 +114,13 @@ export default function Home() {
     const base64Response = await fetch(image);
     const blob = await base64Response.blob();
 
-    const uploaded = await upload(`prompt-${Math.random()}.png`, blob, {
-      access: "public",
-      handleUploadUrl: "/api/upload",
-    });
+    const uploaded = await toast.promise(
+      upload(`prompt-${Math.random()}.png`, blob, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+      }),
+      { loading: "Uploading...", success: "Uploaded!", error: "Upload failed" }
+    );
 
     ws!.send(
       JSON.stringify({
