@@ -14,8 +14,28 @@
 
 </p>
 
-Welcome to the geese cult my friend!
+**Welcome to the geese cult my friend!** We're Deet, Fayd, and Sam... let us tell you about our geese!
 
-Hack The North 2023
+At Hack the North, we found it tough to break the ice and balance coding with socializing. This personal challenge inspired us to create a project that makes it easier to make new friendships and get us all out of our social comfort zones.
 
-Deet, Fayd, and Sam
+That's awesome and all but how does it work? Here's how the game works:
+
+1. Scan your badge's QR code to log in.
+2. Find a (new) friend who you'd like to compete against.
+3. Receive a prompt, eg. "take a selfie with a person taller than you".
+4. Race to take a fun picture based on the prompt before the other player does.
+5. Win or lose, then you got to choose wether or not to rematch!
+
+If you've got a HTN badge, head over to [htgeese.tech](https://htgeese.tech/) to take it for a spin!
+
+## How We Built It
+
+We built the websockets server using Go, it manages the game's state and updates the database when necessary. Our front end, include the custom duck generator, is built using Next.js and React. We used GPT-3.5 provided hackathon-relevant prompts, we used Prisma and PostgreSQL for the database, and we stored our images in Vercel Blob.
+
+Here are some janky photos of it in action from when we were testing:
+
+<img src="https://cloud-8bnhwq0dh-hack-club-bot.vercel.app/0screenshot_2023-09-17_at_7.48.45_am.png" width="600px" />
+<img src="https://cloud-8bnhwq0dh-hack-club-bot.vercel.app/1screenshot_2023-09-17_at_7.49.03_am.png" width="600px" />
+<img src="https://cloud-8bnhwq0dh-hack-club-bot.vercel.app/2screenshot_2023-09-17_at_7.49.00_am.png" width="600px" />
+
+_(those are the faces you make at 4am when your code just isn't working...)_
